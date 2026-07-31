@@ -1,0 +1,11 @@
+venv/
+data/raw/
+data/parsed/
+data/features/
+__pycache__/
+*.pyc
+*.joblib
+*.bin
+.ipynb_checkpoints/
+node_modules/
+.env
