@@ -1,7 +1,5 @@
 import re
 
-# Keyword rules are domain-agnostic: they match against template text,
-# so the same categories apply to HDFS, banking or traffic logs.
 CAUSE_PATTERNS = {
     'OVERLOAD': [
         r'timeout', r'timed out', r'retry', r'retrying', r'queue.*full',
@@ -24,6 +22,15 @@ CAUSE_PATTERNS = {
     'RESOURCE': [
         r'out of memory', r'no space', r'disk full', r'quota',
         r'insufficient', r'limit exceeded',
+    ],
+    'DATA_INTEGRITY': [
+        r'checksum', r'corrupt', r'crc', r'mismatch',
+        r'not found in volumemap', r'does not belong to any file',
+        r'already existing',
+    ],
+    'RECOVERY_ACTION': [
+        r'redundant', r'reopen', r'replicate',
+        r'pendingreplicationmonitor', r'neededreplications',
     ],
 }
 
@@ -48,8 +55,7 @@ def diagnose(explanation, template_map, volume_ratio=1.0):
             votes[cause] = votes.get(cause, 0) + item['deviation']
             evidence.append(f"{text[:70]} occurred {item['observed']:.0f}x "
                             f"(expected {item['expected']})")
-
-    # A session missing most of its expected terminal events did not complete
+            
     missing_weight = sum(-i['deviation'] for i in explanation['missing'])
     expected_total = sum(i['expected'] for i in explanation['missing'])
     if expected_total and missing_weight / expected_total > INCOMPLETE_THRESHOLD:
@@ -58,7 +64,6 @@ def diagnose(explanation, template_map, volume_ratio=1.0):
             evidence.append(f"{template_map[item['event']][:70]} missing "
                             f"(expected {item['expected']})")
 
-    # Volume is the signal that separates overload from a plain failure
     if volume_ratio > 2.0:
         votes['OVERLOAD'] = votes.get('OVERLOAD', 0) + volume_ratio
         evidence.append(f"Log volume {volume_ratio:.1f}x above the normal average")
