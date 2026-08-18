@@ -9,6 +9,12 @@ HDFS_PATTERN = re.compile(
     r'(?P<level>\w+)\s+(?P<component>\S+):\s+(?P<content>.*)$'
 )
 
+BGL_PATTERN = re.compile(
+    r'^(?P<label>\S+)\s+(?P<timestamp>\d+)\s+(?P<date>\d{4}\.\d{2}\.\d{2})\s+'
+    r'(?P<node>\S+)\s+(?P<time>\S+)\s+(?P<noderepeat>\S+)\s+(?P<type>\S+)\s+'
+    r'(?P<component>\S+)\s+(?P<level>\S+)\s*(?P<content>.*)$'
+)
+
 def parse_fields(path, limit=None):
     rows, skipped = [], 0
     with open(path, errors='ignore') as f:
@@ -16,6 +22,21 @@ def parse_fields(path, limit=None):
             if limit and i >= limit:
                 break
             match = HDFS_PATTERN.match(line.strip())
+            if match:
+                rows.append(match.groupdict())
+            else:
+                skipped += 1
+    print(f"Parsed: {len(rows)} | Skipped: {skipped}")
+    return pd.DataFrame(rows)
+
+
+def parse_bgl_fields(path, limit=None):
+    rows, skipped = [], 0
+    with open(path, errors='ignore') as f:
+        for i, line in enumerate(f):
+            if limit and i >= limit:
+                break
+            match = BGL_PATTERN.match(line.strip())
             if match:
                 rows.append(match.groupdict())
             else:
