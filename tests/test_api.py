@@ -65,8 +65,66 @@ def test_analyze_accepts_valid_hdfs_file(client, valid_hdfs_text):
     assert 'run_id' in body
 
 
+def test_analyze_auto_detects_hdfs_without_log_type_param(client, valid_hdfs_text):
+    resp = client.post('/api/analyze', files={
+        'file': ('mystery.log', valid_hdfs_text.encode('utf-8'), 'text/plain'),
+    })
+    assert resp.status_code == 200
+    assert resp.json()['log_type'] == 'hdfs'
+
+
+def test_analyze_auto_detects_bgl_without_log_type_param(client, valid_bgl_text):
+    resp = client.post('/api/analyze', files={
+        'file': ('mystery.log', valid_bgl_text.encode('utf-8'), 'text/plain'),
+    })
+    assert resp.status_code == 200
+    assert resp.json()['log_type'] == 'bgl'
+
+
 def test_stats_endpoint_tracks_upload_failures(client):
     before = client.get('/api/stats').json()['upload_failures'].get('EMPTY_FILE', 0)
     client.post('/api/analyze', files={'file': ('empty.log', b'', 'text/plain')})
     after = client.get('/api/stats').json()['upload_failures'].get('EMPTY_FILE', 0)
     assert after == before + 1
+
+
+def test_health_reports_both_log_types(client):
+    resp = client.get('/api/health')
+    body = resp.json()
+    assert set(body['log_types']) == {'hdfs', 'bgl'}
+    assert body['log_types']['bgl']['status'] == 'ok'
+
+
+def test_format_info_bgl(client):
+    resp = client.get('/api/format-info', params={'log_type': 'bgl'})
+    assert resp.status_code == 200
+    assert resp.json()['supported_format'] == 'BGL'
+
+
+def test_format_info_unknown_log_type(client):
+    resp = client.get('/api/format-info', params={'log_type': 'nope'})
+    assert resp.status_code == 400
+
+
+def test_analyze_accepts_valid_bgl_file(client, valid_bgl_text):
+    resp = client.post('/api/analyze', params={'log_type': 'bgl'}, files={
+        'file': ('bgl.log', valid_bgl_text.encode('utf-8'), 'text/plain'),
+    })
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body['log_type'] == 'bgl'
+    assert 'message' in body
+
+
+def test_analyze_rejects_unknown_log_type(client, valid_hdfs_text):
+    resp = client.post('/api/analyze', params={'log_type': 'nope'}, files={
+        'file': ('x.log', valid_hdfs_text.encode('utf-8'), 'text/plain'),
+    })
+    assert resp.status_code == 400
+    assert resp.json()['detail']['reason'] == 'UNKNOWN_LOG_TYPE'
+
+
+def test_templates_endpoint_bgl(client):
+    resp = client.get('/api/templates', params={'log_type': 'bgl'})
+    assert resp.status_code == 200
+    assert len(resp.json()) > 0

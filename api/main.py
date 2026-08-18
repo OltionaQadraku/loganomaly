@@ -7,7 +7,7 @@ from datetime import datetime
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
-from api.pipeline import DetectionPipeline, HDFS_LINE_EXAMPLE
+from api.pipeline import PIPELINE_CLASSES, HDFS_LINE_EXAMPLE, BGL_LINE_EXAMPLE
 
 app = FastAPI(title="LogSense API")
 
@@ -25,12 +25,33 @@ def log_failure(reason):
     failure_counts[reason] += 1
     logger.warning('upload rejected: %s', reason)
 
-MAX_FILE_SIZE = 20 * 1024 * 1024  
+
+MAX_FILE_SIZE = 20 * 1024 * 1024  # 20 MB
 BLOCKED_EXTENSIONS = {
     '.zip', '.rar', '.7z', '.gz', '.tar',
     '.png', '.jpg', '.jpeg', '.gif', '.bmp',
     '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx',
     '.exe', '.dll', '.bin', '.so', '.dylib',
+}
+
+FORMAT_INFO = {
+    'hdfs': {
+        "supported_format": "HDFS",
+        "line_pattern": "<date> <time> <pid> <level> <component>: <message>",
+        "example_line": HDFS_LINE_EXAMPLE,
+        "notes": "Only HDFS-style logs are supported for this log type — the "
+                 "pattern above must match each line for it to be understood.",
+    },
+    'bgl': {
+        "supported_format": "BGL",
+        "line_pattern": "<label> <timestamp> <date> <node> <time> <node_repeat> "
+                         "<type> <component> <level> <message>",
+        "example_line": BGL_LINE_EXAMPLE,
+        "notes": "Only BGL-style logs are supported for this log type — the "
+                 "pattern above must match each line for it to be understood. "
+                 "'label' is '-' for normal lines or a fault-category code "
+                 "(e.g. KERNDTLB) for known failures.",
+    },
 }
 
 
@@ -70,6 +91,7 @@ def validate_upload(filename, content):
             'message': "This file is empty.",
         })
 
+
 app.add_middleware(
     CORSMiddleware,
     allow_origin_regex=r"http://localhost:\d+",
@@ -80,47 +102,74 @@ app.add_middleware(
 def root():
     return {"service": "LogSense API", "docs": "/docs"}
 
-try:
-    pipeline = DetectionPipeline()
-    startup_error = None
-except Exception as exc:
-    pipeline = None
-    startup_error = str(exc)
-    logger.error('model artifacts failed to load: %s', exc)
+
+pipelines = {}
+startup_errors = {}
+for log_type, pipeline_cls in PIPELINE_CLASSES.items():
+    try:
+        pipelines[log_type] = pipeline_cls()
+    except Exception as exc:
+        startup_errors[log_type] = str(exc)
+        logger.error('%s model artifacts failed to load: %s', log_type, exc)
 
 runs = {}
 
 
-def require_pipeline():
-    if pipeline is None:
+def require_pipeline(log_type):
+    if log_type not in PIPELINE_CLASSES:
+        raise HTTPException(400, {
+            'reason': 'UNKNOWN_LOG_TYPE',
+            'message': f"Unknown log_type '{log_type}'. Supported: "
+                       f"{', '.join(PIPELINE_CLASSES)}.",
+        })
+    if log_type not in pipelines:
         raise HTTPException(503, {
             'reason': 'MODEL_UNAVAILABLE',
-            'message': "The analysis models failed to load on the server. "
-                       "Uploads can't be analysed right now.",
+            'message': f"The '{log_type}' analysis models failed to load on "
+                       f"the server. Uploads for this log type can't be "
+                       f"analysed right now.",
         })
-    return pipeline
+    return pipelines[log_type]
+
+
+def detect_log_type(content):
+    """Best-effort auto-detection: ask every loaded pipeline how much of the
+    content it actually understands, and pick the clear winner. Users
+    shouldn't need to know or choose a log type up front."""
+    best_type, best_ratio = None, 0.0
+    for candidate_type, candidate_pipeline in pipelines.items():
+        records, skipped, _ = candidate_pipeline.parse(content)
+        total = len(records) + skipped
+        ratio = (len(records) / total) if total else 0
+        if ratio > 0.5 and ratio > best_ratio:
+            best_type, best_ratio = candidate_type, ratio
+    return best_type
 
 
 @app.get("/api/health")
 def health():
-    if pipeline is None:
-        return {"status": "degraded", "error": startup_error}
     return {
-        "status": "ok",
-        "models": list(pipeline.models),
-        "events": len(pipeline.event_names),
+        "status": "ok" if not startup_errors else "degraded",
+        "log_types": {
+            log_type: (
+                {"status": "ok", "models": list(p.models), "events": len(p.event_names)}
+                if (p := pipelines.get(log_type)) is not None
+                else {"status": "degraded", "error": startup_errors.get(log_type)}
+            )
+            for log_type in PIPELINE_CLASSES
+        },
     }
 
 
 @app.get("/api/format-info")
-def format_info():
-    return {
-        "supported_format": "HDFS",
-        "line_pattern": "<date> <time> <pid> <level> <component>: <message>",
-        "example_line": HDFS_LINE_EXAMPLE,
-        "notes": "Only HDFS-style logs are supported — the pattern above must "
-                 "match each line for it to be understood.",
-    }
+def format_info(log_type: str = "hdfs"):
+    if log_type not in FORMAT_INFO:
+        raise HTTPException(400, {
+            'reason': 'UNKNOWN_LOG_TYPE',
+            'message': f"Unknown log_type '{log_type}'. Supported: "
+                       f"{', '.join(FORMAT_INFO)}.",
+        })
+    return FORMAT_INFO[log_type]
 
 
 @app.get("/api/stats")
@@ -132,9 +181,9 @@ def stats():
 
 
 @app.post("/api/analyze")
-async def analyze(file: UploadFile = File(...), model: str = "pca", top: int = 20):
-    pipeline = require_pipeline()
-    if model not in pipeline.models:
+async def analyze(file: UploadFile = File(...), model: str = "pca", top: int = 20,
+                   log_type: str = "auto"):
+    if model not in {'pca', 'isolation_forest', 'lof'}:
         raise HTTPException(400, f"Unknown model: {model}")
 
     raw = await file.read()
@@ -147,6 +196,10 @@ async def analyze(file: UploadFile = File(...), model: str = "pca", top: int = 2
         content = raw.decode("utf-8", errors="replace")
         encoding_issues = content.count("�")
 
+    if log_type == "auto":
+        log_type = detect_log_type(content) or next(iter(pipelines), 'hdfs')
+
+    pipeline = require_pipeline(log_type)
     result = pipeline.analyze(content, model)
 
     if "error" in result:
@@ -220,5 +273,5 @@ def get_run(run_id: str):
 
 
 @app.get("/api/templates")
-def templates():
-    return require_pipeline().templates
+def templates(log_type: str = "hdfs"):
+    return require_pipeline(log_type).templates
