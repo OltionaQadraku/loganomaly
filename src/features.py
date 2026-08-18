@@ -10,6 +10,32 @@ def build_sessions(df):
     return sessions.reset_index(name='EventSequence')
 
 
+def build_windows(df, window_size=100):
+    """Group consecutive log lines into fixed-size tumbling windows.
+
+    Used for logs (like BGL) that have no natural session ID to group by.
+    """
+    df = df.reset_index(drop=True).assign(WindowId=lambda d: d.index // window_size)
+    windows = df.groupby('WindowId')['EventId'].apply(list)
+    return windows.reset_index(name='EventSequence')
+
+
+def attach_window_labels(windows, df, window_size=100):
+    """Merge per-line fault-category labels into the window table.
+
+    A window is anomalous (y=1) if any of its lines carry a label other
+    than '-'. `causes` keeps the distinct fault categories present.
+    """
+    df = df.reset_index(drop=True).assign(WindowId=lambda d: d.index // window_size)
+
+    def summarize(labels):
+        causes = sorted({label for label in labels if label != '-'})
+        return pd.Series({'y': int(bool(causes)), 'causes': causes})
+
+    summary = df.groupby('WindowId')['label'].apply(list).apply(summarize).reset_index()
+    return windows.merge(summary, on='WindowId', how='left')
+
+
 def attach_labels(sessions, label_path):
     """Merge ground-truth anomaly labels into the session table."""
     labels = pd.read_csv(label_path)
