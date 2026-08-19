@@ -26,7 +26,7 @@ def log_failure(reason):
     logger.warning('upload rejected: %s', reason)
 
 
-MAX_FILE_SIZE = 20 * 1024 * 1024  # 20 MB
+MAX_FILE_SIZE = 20 * 1024 * 1024  
 BLOCKED_EXTENSIONS = {
     '.zip', '.rar', '.7z', '.gz', '.tar',
     '.png', '.jpg', '.jpeg', '.gif', '.bmp',
@@ -226,7 +226,7 @@ async def analyze(file: UploadFile = File(...), model: str = "pca", top: int = 2
     return {**{k: v for k, v in result.items() if k != "anomalies"},
             "anomalies": [
                 {k: a[k] for k in ('session_id', 'score', 'event_count',
-                                   'primary_cause')}
+                                   'primary_cause', 'title', 'severity')}
                 for a in result["anomalies"][:top]
             ]}
 
@@ -243,7 +243,7 @@ def list_anomalies(run_id: str, skip: int = 0, limit: int = 50, cause: str = Non
     return {
         "total": len(items),
         "items": [{k: a[k] for k in ('session_id', 'score', 'event_count',
-                                     'primary_cause')}
+                                     'primary_cause', 'title', 'severity')}
                   for a in items[skip:skip + limit]],
     }
 
