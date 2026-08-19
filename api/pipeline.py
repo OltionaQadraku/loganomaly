@@ -8,7 +8,7 @@ import numpy as np
 from src.parser import HDFS_PATTERN, BGL_PATTERN, extract_block_id, build_miner
 from src.explain import explain_session
 from src.diagnose import diagnose
-from src.narrate import narrate
+from src.narrate import narrate, get_cause_info
 
 HDFS_LINE_EXAMPLE = (
     '081109 203607 169 INFO dfs.DataNode$DataXceiver: Receiving block '
@@ -164,11 +164,14 @@ class BaseDetectionPipeline:
                                              float(lengths[i] / mean_length))
             cause_counts[diagnosis['primary_cause']] += 1
             unit_id = self.format_unit_id(key)
+            cause_info = get_cause_info(diagnosis['primary_cause'])
             anomalies.append({
                 'session_id': unit_id,
                 'score': round(float(scores[i]), 6),
                 'event_count': int(lengths[i]),
                 'primary_cause': diagnosis['primary_cause'],
+                'title': cause_info['title'],
+                'severity': cause_info['severity'],
                 'all_causes': diagnosis['all_causes'],
                 'report': narrate(explanation, diagnosis, self.templates, unit_id),
                 'excess': explanation['excess'],

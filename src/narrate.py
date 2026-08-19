@@ -94,13 +94,6 @@ def _times(count):
         return 'once'
     return f'{count:.0f} times'
 
-
-# BGL fault codes are prefixed by the subsystem that raised them (a
-# documented property of the dataset, not a guess -- APP*/ciod codes were
-# verified directly against this project's training data: every APP* line
-# is a "ciod: ..." message). Wording here is deliberately plain -- no
-# internal names like "ciod" or the raw code itself -- since this is what a
-# non-technical reader sees first.
 CAUSE_PREFIX_INFO = {
     'KERN': {
         'title': 'A hardware or system-level fault on the machine itself',
@@ -194,6 +187,17 @@ def _fallback_info(cause):
                  'that led to this.',
         'severity': 'MEDIUM',
     }
+
+
+def get_cause_info(cause):
+    """The plain-language (title, meaning, check, severity) block for a cause
+    code -- curated where we have one, prefix-grounded fallback otherwise.
+    Used both by narrate() and directly by the API, so a short, humanised
+    title/severity is available without a caller needing to re-derive it
+    from the raw cause code."""
+    if cause == 'UNKNOWN':
+        return CAUSE_INFO['UNKNOWN']
+    return CAUSE_INFO.get(cause) or _fallback_info(cause)
 
 
 def narrate(explanation, diagnosis, template_map, session_id=None):
