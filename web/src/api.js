@@ -7,15 +7,16 @@ export class ApiError extends Error {
     this.detail = detail || {};
   }
 }
+const MAX_ANOMALIES_FETCHED = 500;
 
-export async function analyze(file, model, top = 20) {
+export async function analyze(file) {
   const form = new FormData();
   form.append('file', file);
 
-  const res = await fetch(
-    `${API_BASE}/api/analyze?model=${encodeURIComponent(model)}&top=${top}`,
-    { method: 'POST', body: form }
-  );
+  const res = await fetch(`${API_BASE}/api/analyze?top=${MAX_ANOMALIES_FETCHED}`, {
+    method: 'POST',
+    body: form,
+  });
 
   if (!res.ok) {
     const body = await res.json().catch(() => null);
@@ -30,9 +31,9 @@ export async function analyze(file, model, top = 20) {
 }
 
 export async function getAnomaly(runId, sessionId) {
-  const res = await fetch(`${API_BASE}/api/runs/${runId}/anomalies/${sessionId}`);
+  const res = await fetch(`${API_BASE}/api/runs/${runId}/anomalies/${encodeURIComponent(sessionId)}`);
   if (!res.ok) {
-    throw new Error('Could not load the details for this session.');
+    throw new Error('Could not load the details for this item.');
   }
   return res.json();
 }
