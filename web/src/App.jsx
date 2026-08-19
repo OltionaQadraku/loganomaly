@@ -1,10 +1,9 @@
 import { useState } from 'react';
-import UploadPanel from './components/UploadPanel';
-import ErrorPanel from './components/ErrorPanel';
-import WarningsPanel from './components/WarningsPanel';
-import SummaryPanel from './components/SummaryPanel';
-import AnomalyTable from './components/AnomalyTable';
-import AnomalyDetail from './components/AnomalyDetail';
+import Sidebar from './components/Sidebar';
+import UploadZone from './components/UploadZone';
+import StatusError from './components/StatusError';
+import AnalysisOverview from './components/AnalysisOverview';
+import IssueList from './components/IssueList';
 import { analyze } from './api';
 import './styles.css';
 
@@ -12,15 +11,13 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
-  const [selected, setSelected] = useState(null);
 
-  async function handleSubmit(file, model) {
+  async function handleAnalyze(file) {
     setLoading(true);
     setError(null);
     setResult(null);
-    setSelected(null);
     try {
-      const data = await analyze(file, model);
+      const data = await analyze(file);
       setResult(data);
     } catch (err) {
       setError(err);
@@ -30,30 +27,24 @@ export default function App() {
   }
 
   return (
-    <div className="app">
-      <header className="app-header">
-        <h1>LogSense</h1>
-        <p>Detecting and explaining anomalies in log files.</p>
-      </header>
+    <div className="shell">
+      <Sidebar />
 
-      <UploadPanel onSubmit={handleSubmit} loading={loading} />
+      <main className="main">
+        <header className="page-header">
+          <h1>Analysis Results</h1>
+          <p>Upload a log file and we will find potential issues and explain what may have caused them. No technical knowledge needed.</p>
+        </header>
 
-      {error && <ErrorPanel error={error} />}
+        <div className={`top-grid${error || result ? '' : ' single'}`}>
+          <UploadZone onAnalyze={handleAnalyze} loading={loading} />
+          {error
+            ? <StatusError error={error} />
+            : result && <AnalysisOverview result={result} />}
+        </div>
 
-      {result && (
-        <>
-          <WarningsPanel warnings={result.warnings} />
-          <SummaryPanel result={result} />
-          <div className="results-columns">
-            <AnomalyTable
-              anomalies={result.anomalies}
-              selected={selected}
-              onSelect={setSelected}
-            />
-            <AnomalyDetail runId={result.run_id} sessionId={selected} />
-          </div>
-        </>
-      )}
+        {result && <IssueList anomalies={result.anomalies} runId={result.run_id} />}
+      </main>
     </div>
   );
 }
