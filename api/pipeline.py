@@ -32,6 +32,7 @@ FORMAT_GUESSES = {
 SKIPPED_RATIO_WARNING = 0.2
 UNKNOWN_EVENT_RATIO_WARNING = 0.3
 SAMPLE_LINE_COUNT = 3
+SEVERITY_RANK = {'CRITICAL': 4, 'HIGH': 3, 'MEDIUM': 2, 'LOW': 1}
 
 
 def guess_format(sample_lines):
@@ -198,6 +199,11 @@ class BaseDetectionPipeline:
                     f'Analysis completed successfully — {len(anomalies)} '
                     f'anomalous session(s) found out of {len(keys)}.')
 
+        risk_level = None
+        if anomalies:
+            risk_level = max((a['severity'] for a in anomalies),
+                              key=lambda s: SEVERITY_RANK.get(s, 0))
+
         return {
             'log_type': self.LOG_TYPE,
             'model': model_name,
@@ -208,6 +214,7 @@ class BaseDetectionPipeline:
             'total_sessions': len(keys),
             'anomalies_found': len(anomalies),
             'anomaly_rate': round(len(anomalies) / len(keys) * 100, 2),
+            'risk_level': risk_level,
             'cause_distribution': dict(cause_counts),
             'warnings': warnings,
             'anomalies': anomalies,
