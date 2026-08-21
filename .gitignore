@@ -11,3 +11,5 @@ node_modules/
 .env
 logs/
 .pytest_cache/
+*.db
+*.db-journal

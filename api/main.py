@@ -1,12 +1,16 @@
 import logging
 import os
-import uuid
+import time
 from collections import Counter
-from datetime import datetime
 
-from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi import Depends, FastAPI, File, HTTPException, Response, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+from sqlalchemy.orm import Session
 
+from api.auth import COOKIE_NAME, create_token, get_current_user, hash_password, verify_password
+from api.db import get_db, init_db
+from api.db_models import Run, User
 from api.pipeline import PIPELINE_CLASSES, HDFS_LINE_EXAMPLE, BGL_LINE_EXAMPLE
 
 app = FastAPI(title="LogSense API")
@@ -20,6 +24,8 @@ logging.basicConfig(
 logger = logging.getLogger('logsense')
 failure_counts = Counter()
 
+init_db()
+
 
 def log_failure(reason):
     failure_counts[reason] += 1
@@ -27,6 +33,8 @@ def log_failure(reason):
 
 
 MAX_FILE_SIZE = 20 * 1024 * 1024  
+MIN_PASSWORD_LENGTH = 6
+MIN_USERNAME_LENGTH = 3
 BLOCKED_EXTENSIONS = {
     '.zip', '.rar', '.7z', '.gz', '.tar',
     '.png', '.jpg', '.jpeg', '.gif', '.bmp',
@@ -53,6 +61,11 @@ FORMAT_INFO = {
                  "(e.g. KERNDTLB) for known failures.",
     },
 }
+
+
+class Credentials(BaseModel):
+    username: str
+    password: str
 
 
 def validate_upload(filename, content):
@@ -95,6 +108,7 @@ def validate_upload(filename, content):
 app.add_middleware(
     CORSMiddleware,
     allow_origin_regex=r"http://localhost:\d+",
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -111,8 +125,6 @@ for log_type, pipeline_cls in PIPELINE_CLASSES.items():
     except Exception as exc:
         startup_errors[log_type] = str(exc)
         logger.error('%s model artifacts failed to load: %s', log_type, exc)
-
-runs = {}
 
 
 def require_pipeline(log_type):
@@ -146,6 +158,65 @@ def detect_log_type(content):
     return best_type
 
 
+def set_auth_cookie(response, user_id):
+    response.set_cookie(
+        COOKIE_NAME, create_token(user_id),
+        httponly=True, samesite='lax', max_age=60 * 60 * 24 * 7,
+    )
+
+
+@app.post("/api/register")
+def register(payload: Credentials, response: Response, db: Session = Depends(get_db)):
+    username = payload.username.strip()
+    if len(username) < MIN_USERNAME_LENGTH:
+        raise HTTPException(400, {
+            'reason': 'INVALID_USERNAME',
+            'message': f"Username must be at least {MIN_USERNAME_LENGTH} characters.",
+        })
+    if len(payload.password) < MIN_PASSWORD_LENGTH:
+        raise HTTPException(400, {
+            'reason': 'WEAK_PASSWORD',
+            'message': f"Password must be at least {MIN_PASSWORD_LENGTH} characters.",
+        })
+    if db.query(User).filter(User.username == username).first():
+        raise HTTPException(400, {
+            'reason': 'USERNAME_TAKEN',
+            'message': "That username is already taken.",
+        })
+
+    user = User(username=username, password_hash=hash_password(payload.password))
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+
+    set_auth_cookie(response, user.id)
+    return {"username": user.username}
+
+
+@app.post("/api/login")
+def login(payload: Credentials, response: Response, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.username == payload.username.strip()).first()
+    if not user or not verify_password(payload.password, user.password_hash):
+        raise HTTPException(401, {
+            'reason': 'INVALID_CREDENTIALS',
+            'message': "Incorrect username or password.",
+        })
+
+    set_auth_cookie(response, user.id)
+    return {"username": user.username}
+
+
+@app.post("/api/logout")
+def logout(response: Response):
+    response.delete_cookie(COOKIE_NAME)
+    return {"ok": True}
+
+
+@app.get("/api/me")
+def me(user: User = Depends(get_current_user)):
+    return {"username": user.username}
+
+
 @app.get("/api/health")
 def health():
     return {
@@ -173,16 +244,17 @@ def format_info(log_type: str = "hdfs"):
 
 
 @app.get("/api/stats")
-def stats():
+def stats(db: Session = Depends(get_db)):
     return {
-        "total_runs": len(runs),
+        "total_runs": db.query(Run).count(),
         "upload_failures": dict(failure_counts),
     }
 
 
 @app.post("/api/analyze")
 async def analyze(file: UploadFile = File(...), model: str = "pca", top: int = 20,
-                   log_type: str = "auto"):
+                   log_type: str = "auto", user: User = Depends(get_current_user),
+                   db: Session = Depends(get_db)):
     if model not in {'pca', 'isolation_forest', 'lof'}:
         raise HTTPException(400, f"Unknown model: {model}")
 
@@ -200,7 +272,9 @@ async def analyze(file: UploadFile = File(...), model: str = "pca", top: int = 2
         log_type = detect_log_type(content) or next(iter(pipelines), 'hdfs')
 
     pipeline = require_pipeline(log_type)
+    started_at = time.time()
     result = pipeline.analyze(content, model)
+    result_duration = round(time.time() - started_at, 2)
 
     if "error" in result:
         log_failure('FORMAT_NOT_RECOGNISED')
@@ -217,26 +291,50 @@ async def analyze(file: UploadFile = File(...), model: str = "pca", top: int = 2
             0, f"{encoding_issues} character(s) could not be read as UTF-8 "
                f"and were replaced — the file may use a different encoding.")
 
-    run_id = str(uuid.uuid4())[:8]
-    result["run_id"] = run_id
-    result["filename"] = file.filename
-    result["analyzed_at"] = datetime.utcnow().isoformat()
-    runs[run_id] = result
+    run = Run(
+        user_id=user.id,
+        filename=file.filename,
+        log_type=result.get('log_type'),
+        model=model,
+        message=result.get('message'),
+        total_lines=result.get('total_lines'),
+        skipped_lines=result.get('skipped_lines'),
+        unknown_events=result.get('unknown_events'),
+        total_sessions=result.get('total_sessions'),
+        anomalies_found=result.get('anomalies_found'),
+        anomaly_rate=result.get('anomaly_rate'),
+        risk_level=result.get('risk_level'),
+        duration_seconds=result_duration,
+        cause_distribution=result.get('cause_distribution'),
+        warnings=result.get('warnings', []),
+        anomalies=result.get('anomalies', []),
+    )
+    db.add(run)
+    db.commit()
+    db.refresh(run)
 
-    return {**{k: v for k, v in result.items() if k != "anomalies"},
+    full = run.to_dict()
+    return {**{k: v for k, v in full.items() if k != "anomalies"},
             "anomalies": [
                 {k: a[k] for k in ('session_id', 'score', 'event_count',
                                    'primary_cause', 'title', 'severity')}
-                for a in result["anomalies"][:top]
+                for a in full["anomalies"][:top]
             ]}
 
 
-@app.get("/api/runs/{run_id}/anomalies")
-def list_anomalies(run_id: str, skip: int = 0, limit: int = 50, cause: str = None):
-    if run_id not in runs:
+def get_owned_run(run_id, user, db):
+    run = db.query(Run).filter(Run.id == run_id, Run.user_id == user.id).first()
+    if not run:
         raise HTTPException(404, "Run not found")
+    return run
 
-    items = runs[run_id]["anomalies"]
+
+@app.get("/api/runs/{run_id}/anomalies")
+def list_anomalies(run_id: str, skip: int = 0, limit: int = 50, cause: str = None,
+                    user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    run = get_owned_run(run_id, user, db)
+
+    items = run.anomalies
     if cause:
         items = [a for a in items if a["primary_cause"] == cause]
 
@@ -249,27 +347,29 @@ def list_anomalies(run_id: str, skip: int = 0, limit: int = 50, cause: str = Non
 
 
 @app.get("/api/runs/{run_id}/anomalies/{session_id}")
-def get_anomaly(run_id: str, session_id: str):
-    if run_id not in runs:
-        raise HTTPException(404, "Run not found")
+def get_anomaly(run_id: str, session_id: str,
+                 user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    run = get_owned_run(run_id, user, db)
 
-    for item in runs[run_id]["anomalies"]:
+    for item in run.anomalies:
         if item["session_id"] == session_id:
             return item
 
     raise HTTPException(404, "Session not found")
 
+
 @app.get("/api/runs")
-def list_runs():
-    return [{k: v for k, v in run.items() if k != "anomalies"}
-            for run in runs.values()]
+def list_runs(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    runs = (db.query(Run)
+              .filter(Run.user_id == user.id)
+              .order_by(Run.analyzed_at.desc())
+              .all())
+    return [r.to_dict(include_anomalies=False) for r in runs]
 
 
 @app.get("/api/runs/{run_id}")
-def get_run(run_id: str):
-    if run_id not in runs:
-        raise HTTPException(404, "Run not found")
-    return runs[run_id]
+def get_run(run_id: str, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    return get_owned_run(run_id, user, db).to_dict()
 
 
 @app.get("/api/templates")

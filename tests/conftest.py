@@ -1,8 +1,34 @@
+import os
+
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
-from api.main import app
-from api.pipeline import DetectionPipeline, BGLDetectionPipeline
+from api.db import Base, get_db
+import api.db_models  
+
+TEST_DB_PATH = 'test_logsense.db'
+if os.path.exists(TEST_DB_PATH):
+    os.remove(TEST_DB_PATH)
+
+test_engine = create_engine(f'sqlite:///./{TEST_DB_PATH}', connect_args={'check_same_thread': False})
+TestSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=test_engine)
+Base.metadata.create_all(bind=test_engine)
+
+
+def _override_get_db():
+    db = TestSessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
+from api.main import app  
+from api.pipeline import DetectionPipeline, BGLDetectionPipeline  
+
+app.dependency_overrides[get_db] = _override_get_db
 
 VALID_HDFS_LINES = [
     '081109 203607 169 INFO dfs.DataNode$DataXceiver: Receiving block '
@@ -36,7 +62,11 @@ def bgl_pipeline():
 
 @pytest.fixture(scope='session')
 def client():
-    return TestClient(app)
+    """A TestClient logged in as a fresh test user (cookies persist across
+    requests made with this client, same as a real browser session)."""
+    c = TestClient(app)
+    c.post('/api/register', json={'username': 'testuser', 'password': 'testpass123'})
+    return c
 
 
 @pytest.fixture
