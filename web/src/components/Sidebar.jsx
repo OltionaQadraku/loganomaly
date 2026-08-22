@@ -1,11 +1,11 @@
 import { IconLogo, IconUploadCloud, IconList } from '../icons';
 
 const NAV_ITEMS = [
-  { label: 'Analyze', icon: IconUploadCloud, active: true },
-  { label: 'History', icon: IconList, active: false },
+  { id: 'analyze', label: 'Analyze', icon: IconUploadCloud },
+  { id: 'history', label: 'History', icon: IconList },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ view, onNavigate, user, onLogout }) {
   return (
     <aside className="sidebar">
       <div className="brand">
@@ -14,13 +14,25 @@ export default function Sidebar() {
       </div>
 
       <nav className="nav">
-        {NAV_ITEMS.map(({ label, icon: Icon, active }) => (
-          <div key={label} className={`nav-item${active ? ' active' : ''}`}>
+        {NAV_ITEMS.map(({ id, label, icon: Icon }) => (
+          <button
+            key={id}
+            type="button"
+            className={`nav-item${view === id ? ' active' : ''}`}
+            onClick={() => onNavigate(id)}
+          >
             <Icon size={18} />
             <span>{label}</span>
-          </div>
+          </button>
         ))}
       </nav>
+
+      <div className="sidebar-footer">
+        <span className="sidebar-username">{user?.username}</span>
+        <button type="button" className="link-button" onClick={onLogout}>
+          Log out
+        </button>
+      </div>
     </aside>
   );
 }
