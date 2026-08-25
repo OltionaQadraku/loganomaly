@@ -11,7 +11,9 @@ from sqlalchemy.orm import Session
 from api.auth import COOKIE_NAME, create_token, get_current_user, hash_password, verify_password
 from api.db import get_db, init_db
 from api.db_models import Run, User
-from api.pipeline import PIPELINE_CLASSES, HDFS_LINE_EXAMPLE, BGL_LINE_EXAMPLE
+from api.pipeline import (PIPELINE_CLASSES, HDFS_LINE_EXAMPLE, BGL_LINE_EXAMPLE,
+                           SSH_LINE_EXAMPLE, GENERIC_LINE_EXAMPLE, guess_format,
+                           SAMPLE_LINE_COUNT)
 
 app = FastAPI(title="LogSense API")
 
@@ -47,7 +49,7 @@ FORMAT_INFO = {
         "supported_format": "HDFS",
         "line_pattern": "<date> <time> <pid> <level> <component>: <message>",
         "example_line": HDFS_LINE_EXAMPLE,
-        "notes": "Only HDFS-style logs are supported for this log type — the "
+        "notes": "Only HDFS-style logs are supported for this log type. The "
                  "pattern above must match each line for it to be understood.",
     },
     'bgl': {
@@ -55,12 +57,32 @@ FORMAT_INFO = {
         "line_pattern": "<label> <timestamp> <date> <node> <time> <node_repeat> "
                          "<type> <component> <level> <message>",
         "example_line": BGL_LINE_EXAMPLE,
-        "notes": "Only BGL-style logs are supported for this log type — the "
+        "notes": "Only BGL-style logs are supported for this log type. The "
                  "pattern above must match each line for it to be understood. "
                  "'label' is '-' for normal lines or a fault-category code "
                  "(e.g. KERNDTLB) for known failures.",
     },
+    'ssh': {
+        "supported_format": "OpenSSH",
+        "line_pattern": "<month> <day> <time> <host> <component>[<pid>]: <message>",
+        "example_line": SSH_LINE_EXAMPLE,
+        "notes": "Only OpenSSH-style auth logs are supported for this log "
+                 "type. The pattern above must match each line for it to "
+                 "be understood.",
+    },
+    'generic': {
+        "supported_format": "Generic/Application",
+        "line_pattern": "[<timestamp>] <LEVEL> [<thread>] <logger> - <message>",
+        "example_line": GENERIC_LINE_EXAMPLE,
+        "notes": "Covers most application logs that use a standard log "
+                 "level (TRACE/DEBUG/INFO/WARN/WARNING/ERROR/FATAL/CRITICAL). "
+                 "Timestamp, thread and logger name are all optional. Only "
+                 "the level is required on a line for it to be understood, "
+                 "and stack-trace lines are attached to the error above them.",
+    },
 }
+
+SUPPORTED_FORMATS_TEXT = ', '.join(FORMAT_INFO[t]['supported_format'] for t in PIPELINE_CLASSES)
 
 
 class Credentials(BaseModel):
@@ -269,7 +291,26 @@ async def analyze(file: UploadFile = File(...), model: str = "pca", top: int = 2
         encoding_issues = content.count("�")
 
     if log_type == "auto":
-        log_type = detect_log_type(content) or next(iter(pipelines), 'hdfs')
+        detected = detect_log_type(content)
+        if detected is None:
+            log_failure('FORMAT_NOT_RECOGNISED')
+            sample_lines = [line.strip()[:200] for line in content.splitlines()
+                             if line.strip()][:SAMPLE_LINE_COUNT]
+            guessed = guess_format(sample_lines)
+            message = (f"This file doesn't match any of the log formats this "
+                       f"tool currently understands ({SUPPORTED_FORMATS_TEXT}).")
+            if guessed:
+                message += (f" It looks closest to the "
+                            f"{guessed.replace('_', ' ')} log format, which "
+                            f"isn't one of the supported formats yet.")
+            raise HTTPException(400, {
+                'reason': 'FORMAT_NOT_RECOGNISED',
+                'message': message,
+                'supported_formats': SUPPORTED_FORMATS_TEXT,
+                'sample_lines': sample_lines,
+                'guessed_format': guessed,
+            })
+        log_type = detected
 
     pipeline = require_pipeline(log_type)
     started_at = time.time()
@@ -280,7 +321,9 @@ async def analyze(file: UploadFile = File(...), model: str = "pca", top: int = 2
         log_failure('FORMAT_NOT_RECOGNISED')
         raise HTTPException(400, {
             'reason': 'FORMAT_NOT_RECOGNISED',
-            'message': result['error'],
+            'message': result['error'] + f" This tool currently supports: "
+                       f"{SUPPORTED_FORMATS_TEXT}.",
+            'supported_formats': SUPPORTED_FORMATS_TEXT,
             'skipped_lines': result.get('skipped_lines'),
             'sample_lines': result.get('sample_lines'),
             'guessed_format': result.get('guessed_format'),
@@ -289,7 +332,7 @@ async def analyze(file: UploadFile = File(...), model: str = "pca", top: int = 2
     if encoding_issues:
         result.setdefault('warnings', []).insert(
             0, f"{encoding_issues} character(s) could not be read as UTF-8 "
-               f"and were replaced — the file may use a different encoding.")
+               f"and were replaced. The file may use a different encoding.")
 
     run = Run(
         user_id=user.id,

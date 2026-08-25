@@ -13,3 +13,4 @@ logs/
 .pytest_cache/
 *.db
 *.db-journal
+uvicorn_*.log

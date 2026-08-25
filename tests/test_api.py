@@ -52,6 +52,22 @@ def test_analyze_reports_unrecognised_format_with_samples(client):
     detail = resp.json()['detail']
     assert detail['reason'] == 'FORMAT_NOT_RECOGNISED'
     assert detail['sample_lines']
+    assert 'HDFS' in detail['message']
+    assert 'BGL' in detail['message']
+    assert 'OpenSSH' in detail['message']
+    assert 'Generic' in detail['message']
+    assert detail['supported_formats']
+
+
+def test_analyze_unrecognised_format_names_the_closest_guess(client):
+    apache_lines = (
+        b'127.0.0.1 - - [10/Oct/2023:13:55:36 +0000] "GET /index.html HTTP/1.1" 200 2326\n'
+    )
+    resp = client.post('/api/analyze', files={'file': ('access.log', apache_lines, 'text/plain')})
+    assert resp.status_code == 400
+    detail = resp.json()['detail']
+    assert detail['guessed_format'] == 'apache'
+    assert 'apache' in detail['message'].lower()
 
 
 def test_analyze_accepts_valid_hdfs_file(client, valid_hdfs_text):
@@ -81,6 +97,28 @@ def test_analyze_auto_detects_bgl_without_log_type_param(client, valid_bgl_text)
     assert resp.json()['log_type'] == 'bgl'
 
 
+def test_analyze_auto_detects_ssh_without_log_type_param(client, valid_ssh_text):
+    resp = client.post('/api/analyze', files={
+        'file': ('mystery.log', valid_ssh_text.encode('utf-8'), 'text/plain'),
+    })
+    assert resp.status_code == 200
+    assert resp.json()['log_type'] == 'ssh'
+
+
+def test_analyze_auto_detects_generic_without_log_type_param(client, valid_generic_text):
+    resp = client.post('/api/analyze', files={
+        'file': ('mystery.log', valid_generic_text.encode('utf-8'), 'text/plain'),
+    })
+    assert resp.status_code == 200
+    assert resp.json()['log_type'] == 'generic'
+
+
+def test_format_info_generic(client):
+    resp = client.get('/api/format-info', params={'log_type': 'generic'})
+    assert resp.status_code == 200
+    assert resp.json()['supported_format'] == 'Generic/Application'
+
+
 def test_stats_endpoint_tracks_upload_failures(client):
     before = client.get('/api/stats').json()['upload_failures'].get('EMPTY_FILE', 0)
     client.post('/api/analyze', files={'file': ('empty.log', b'', 'text/plain')})
@@ -88,11 +126,13 @@ def test_stats_endpoint_tracks_upload_failures(client):
     assert after == before + 1
 
 
-def test_health_reports_both_log_types(client):
+def test_health_reports_all_log_types(client):
     resp = client.get('/api/health')
     body = resp.json()
-    assert set(body['log_types']) == {'hdfs', 'bgl'}
+    assert set(body['log_types']) == {'hdfs', 'bgl', 'ssh', 'generic'}
     assert body['log_types']['bgl']['status'] == 'ok'
+    assert body['log_types']['ssh']['status'] == 'ok'
+    assert body['log_types']['generic']['status'] == 'ok'
 
 
 def test_format_info_bgl(client):

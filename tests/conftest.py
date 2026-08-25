@@ -25,8 +25,9 @@ def _override_get_db():
         db.close()
 
 
-from api.main import app  
-from api.pipeline import DetectionPipeline, BGLDetectionPipeline  
+from api.main import app
+from api.pipeline import (DetectionPipeline, BGLDetectionPipeline, SSHDetectionPipeline,
+                           GenericDetectionPipeline)
 
 app.dependency_overrides[get_db] = _override_get_db
 
@@ -49,6 +50,22 @@ VALID_BGL_LINES = [
     'R01-M0-N1-C:J09-U11 RAS KERNEL FATAL rts panic! - stopping execution',
 ]
 
+VALID_SSH_LINES = [
+    'Dec 10 06:55:46 LabSZ sshd[24200]: Invalid user webmaster from 173.234.31.186',
+    'Dec 10 06:55:48 LabSZ sshd[24200]: Failed password for invalid user '
+    'webmaster from 173.234.31.186 port 38926 ssh2',
+    'Dec 10 07:02:47 LabSZ sshd[24203]: Connection closed by 212.47.254.145 [preauth]',
+]
+
+VALID_GENERIC_LINES = [
+    '2026-08-22 14:00:00 INFO Application started',
+    '2026-08-22 14:05:12 ERROR Database connection failed',
+    '2026-08-22 14:05:13 ERROR Database connection failed',
+    '2026-08-22 14:05:15 WARN Memory usage above threshold',
+    '2026-08-22 14:06:10 ERROR [http-nio-8080-exec-4] com.example.UserService '
+    '- Failed to load user requestId=req-1234',
+]
+
 
 @pytest.fixture(scope='session')
 def pipeline():
@@ -58,6 +75,16 @@ def pipeline():
 @pytest.fixture(scope='session')
 def bgl_pipeline():
     return BGLDetectionPipeline()
+
+
+@pytest.fixture(scope='session')
+def ssh_pipeline():
+    return SSHDetectionPipeline()
+
+
+@pytest.fixture(scope='session')
+def generic_pipeline():
+    return GenericDetectionPipeline()
 
 
 @pytest.fixture(scope='session')
@@ -77,3 +104,13 @@ def valid_hdfs_text():
 @pytest.fixture
 def valid_bgl_text():
     return '\n'.join(VALID_BGL_LINES)
+
+
+@pytest.fixture
+def valid_ssh_text():
+    return '\n'.join(VALID_SSH_LINES)
+
+
+@pytest.fixture
+def valid_generic_text():
+    return '\n'.join(VALID_GENERIC_LINES)
