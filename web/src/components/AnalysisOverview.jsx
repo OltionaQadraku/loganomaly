@@ -1,17 +1,5 @@
 import { IconDocument, IconAlertTriangle, IconGauge, IconInfoCircle, IconCheckCircle, IconShield } from '../icons';
-
-const SEVERITY_RANK = { CRITICAL: 4, HIGH: 3, MEDIUM: 2, LOW: 1 };
-const RISK_LABEL = { CRITICAL: 'Critical', HIGH: 'High', MEDIUM: 'Medium', LOW: 'Low' };
-const RISK_TONE = { CRITICAL: 'critical', HIGH: 'critical', MEDIUM: 'warning', LOW: 'good' };
-
-function overallRisk(anomalies) {
-  if (!anomalies?.length) return { label: 'None', tone: 'good' };
-  let top = 'LOW';
-  for (const a of anomalies) {
-    if ((SEVERITY_RANK[a.severity] ?? 0) > (SEVERITY_RANK[top] ?? 0)) top = a.severity;
-  }
-  return { label: RISK_LABEL[top] || 'Low', tone: RISK_TONE[top] || 'good' };
-}
+import { riskDisplay } from '../risk';
 
 function StatTile({ label, value, icon: Icon, tone }) {
   return (
@@ -31,7 +19,7 @@ export default function AnalysisOverview({ result }) {
   const kindCount = new Set((result.anomalies || []).map((a) => a.title)).size;
   const fetchedCount = result.anomalies?.length ?? 0;
   const truncated = fetchedCount < count;
-  const risk = overallRisk(result.anomalies);
+  const risk = riskDisplay(result.risk_level);
 
   const stats = [
     { label: 'Lines read', value: result.total_lines.toLocaleString(), icon: IconDocument, tone: 'neutral' },
@@ -60,7 +48,7 @@ export default function AnalysisOverview({ result }) {
             : `Affecting ${count} sections of the file in total.`}
       </p>
       {truncated && (
-        <p className="upload-subtitle">This file had a lot to check — counts cover the first {fetchedCount}.</p>
+        <p className="upload-subtitle">This file had a lot to check. Counts cover the first {fetchedCount}.</p>
       )}
 
       <div className="stat-tiles">

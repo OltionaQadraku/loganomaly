@@ -14,4 +14,5 @@ export {
   Gauge as IconGauge,
   ClipboardList as IconClipboard,
   ShieldAlert as IconShield,
+  Download as IconDownload,
 } from 'lucide-react';

@@ -93,7 +93,7 @@ export default function App() {
                 : result && <AnalysisOverview result={result} />}
             </div>
 
-            {result && <IssueList anomalies={result.anomalies} runId={result.run_id} />}
+            {result && <IssueList anomalies={result.anomalies} runId={result.run_id} meta={result} />}
           </>
         ) : (
           <History />

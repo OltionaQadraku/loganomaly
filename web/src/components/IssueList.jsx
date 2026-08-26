@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { getAnomaly } from '../api';
 import { parseReport } from '../reportFormat';
-import { IconAlertCircle, IconAlertTriangle, IconInfoCircle, IconChevronDown } from '../icons';
+import { IconAlertCircle, IconAlertTriangle, IconInfoCircle, IconChevronDown, IconDownload } from '../icons';
 
 const SEVERITY_ICON = {
   CRITICAL: IconAlertCircle,
@@ -39,7 +39,6 @@ function IssueDetails({ report }) {
     </div>
   );
 }
-
 function groupByTitle(anomalies) {
   const groups = new Map();
   for (const a of anomalies) {
@@ -56,14 +55,24 @@ function groupByTitle(anomalies) {
   });
 }
 
-export default function IssueList({ anomalies, runId }) {
+export default function IssueList({ anomalies, runId, meta = {} }) {
   const [openTitle, setOpenTitle] = useState(null);
   const [details, setDetails] = useState({});
+  const [downloading, setDownloading] = useState(false);
+  const [downloadError, setDownloadError] = useState(null);
 
   if (!anomalies?.length) return null;
 
   const groups = groupByTitle(anomalies);
   const total = anomalies.length;
+
+  async function loadReport(group) {
+    if (details[group.title]) return details[group.title];
+    if (group.examples[0].report) return group.examples[0];
+    const full = await getAnomaly(runId, group.examples[0].session_id);
+    setDetails((prev) => ({ ...prev, [group.title]: full }));
+    return full;
+  }
 
   function toggle(group) {
     if (openTitle === group.title) {
@@ -71,25 +80,49 @@ export default function IssueList({ anomalies, runId }) {
       return;
     }
     setOpenTitle(group.title);
-    const representative = group.examples[0];
-    if (!details[group.title]) {
-      getAnomaly(runId, representative.session_id)
-        .then((full) => setDetails((prev) => ({ ...prev, [group.title]: full })))
-        .catch(() => setDetails((prev) => ({ ...prev, [group.title]: { error: true } })));
+    if (!details[group.title] && !group.examples[0].report) {
+      loadReport(group).catch(() =>
+        setDetails((prev) => ({ ...prev, [group.title]: { error: true } })));
+    }
+  }
+
+  async function handleDownload() {
+    setDownloading(true);
+    setDownloadError(null);
+    try {
+      const [{ downloadAnalysisPdf }, withReports] = await Promise.all([
+        import('../pdf'),
+        Promise.all(groups.map(async (group) => {
+          const loaded = await loadReport(group);
+          return { ...group, report: loaded.report };
+        })),
+      ]);
+      downloadAnalysisPdf(meta, withReports);
+    } catch {
+      setDownloadError("Couldn't prepare the PDF. Please try again.");
+    } finally {
+      setDownloading(false);
     }
   }
 
   return (
     <div className="panel issues-panel">
-      <div className="panel-heading">
-        <h2>Possible issues</h2>
-        <p className="upload-subtitle">Grouped by type and ranked by severity.</p>
+      <div className="issues-panel-header">
+        <div className="panel-heading">
+          <h2>Possible issues</h2>
+          <p className="upload-subtitle">Grouped by type and ranked by severity.</p>
+        </div>
+        <button type="button" className="btn-secondary" onClick={handleDownload} disabled={downloading}>
+          <IconDownload size={14} />
+          {downloading ? 'Preparing…' : 'Download PDF'}
+        </button>
       </div>
+      {downloadError && <p className="auth-error">{downloadError}</p>}
 
       <div className="issue-list">
         {groups.map((group) => {
           const isOpen = openTitle === group.title;
-          const detail = details[group.title];
+          const detail = details[group.title] || (group.examples[0].report ? group.examples[0] : null);
           const count = group.examples.length;
           const share = Math.round((count / total) * 100);
           const Icon = SEVERITY_ICON[group.severity] || IconInfoCircle;
@@ -121,11 +154,6 @@ export default function IssueList({ anomalies, runId }) {
                   {!detail && <p className="status-message">Loading details…</p>}
                   {detail?.error && <p className="status-message">Couldn't load the details for this item.</p>}
                   {detail && !detail.error && <IssueDetails report={detail.report} />}
-                  {count > 1 && (
-                    <p className="issue-note">
-                      Showing one example — the same kind of issue happened {count} times in this file.
-                    </p>
-                  )}
                 </div>
               )}
             </div>
