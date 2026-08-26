@@ -392,7 +392,15 @@ class GenericDetectionPipeline(WindowedGroupingMixin, BaseDetectionPipeline):
 
     LOG_TYPE = 'generic'
     LINE_EXAMPLE = GENERIC_LINE_EXAMPLE
-    WINDOW_SIZE = 50
+    # Smaller than BGL/SSH's 100 deliberately: most uploaded application
+    # logs are far shorter than those two datasets, and a 50-100 line
+    # window meant a typical few-hundred-line file only had 1-4 windows
+    # total -- too few for the relative "is this window unusual for THIS
+    # file" comparison in analyze() to have anything meaningful to compare
+    # against, so the anomaly rate could only ever land on a handful of
+    # coarse values (0%, 50%, 100%...). A smaller window gives moderate-
+    # sized files enough windows for that comparison to actually work.
+    WINDOW_SIZE = 20
 
     def __init__(self, config_path='drain3_generic.ini'):
         self.config_path = config_path

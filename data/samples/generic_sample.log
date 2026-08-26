@@ -1,0 +1,416 @@
+2026-08-22 00:00:01 INFO Application started
+2026-08-22 00:00:04 INFO Handling request requestId=req-1001
+2026-08-22 00:00:06 INFO Application started
+2026-08-22 00:00:11 INFO Application started
+2026-08-22 00:00:15 INFO Application started
+2026-08-22 00:00:16 INFO Handling request requestId=req-1005
+2026-08-22 00:00:21 TRACE Entering method processOrder
+2026-08-22 00:00:26 INFO Handling request requestId=req-1007
+2026-08-22 00:00:31 INFO Request completed status=200 duration=66ms
+2026-08-22 00:00:35 TRACE Entering method processOrder
+2026-08-22 00:00:36 INFO Handling request requestId=req-1010
+2026-08-22 00:00:40 DEBUG Cache hit for key user:1011
+2026-08-22 00:00:42 INFO Handling request requestId=req-1012
+2026-08-22 00:00:43 INFO Application started
+2026-08-22 00:00:44 DEBUG Cache hit for key user:1014
+2026-08-22 00:00:49 DEBUG Cache hit for key user:1015
+2026-08-22 00:00:53 TRACE Entering method processOrder
+2026-08-22 00:00:57 INFO Application started
+2026-08-22 00:01:00 TRACE Entering method processOrder
+2026-08-22 00:01:05 INFO Handling request requestId=req-1019
+2026-08-22 00:01:06 INFO Application started
+2026-08-22 00:01:08 DEBUG Cache hit for key user:1021
+2026-08-22 00:01:10 INFO Application started
+2026-08-22 00:01:13 INFO Request completed status=200 duration=172ms
+2026-08-22 00:01:16 INFO Handling request requestId=req-1024
+2026-08-22 00:01:19 INFO Handling request requestId=req-1025
+2026-08-22 00:01:22 INFO Application started
+2026-08-22 00:01:24 TRACE Entering method processOrder
+2026-08-22 00:01:26 INFO Handling request requestId=req-1028
+2026-08-22 00:01:30 DEBUG Cache hit for key user:1029
+2026-08-22 00:01:35 INFO Handling request requestId=req-1030
+2026-08-22 00:01:38 INFO Application started
+2026-08-22 00:01:39 DEBUG Cache hit for key user:1032
+2026-08-22 00:01:42 INFO Application started
+2026-08-22 00:01:47 DEBUG Cache hit for key user:1034
+2026-08-22 00:01:51 INFO Request completed status=200 duration=174ms
+2026-08-22 00:01:55 INFO Handling request requestId=req-1036
+2026-08-22 00:01:57 INFO Handling request requestId=req-1037
+2026-08-22 00:02:02 TRACE Entering method processOrder
+2026-08-22 00:02:07 INFO Request completed status=200 duration=159ms
+2026-08-22 00:02:11 DEBUG Cache hit for key user:1040
+2026-08-22 00:02:13 TRACE Entering method processOrder
+2026-08-22 00:02:14 INFO Application started
+2026-08-22 00:02:16 INFO Handling request requestId=req-1043
+2026-08-22 00:02:20 TRACE Entering method processOrder
+2026-08-22 00:02:24 INFO Request completed status=200 duration=162ms
+2026-08-22 00:02:28 TRACE Entering method processOrder
+2026-08-22 00:02:33 INFO Application started
+2026-08-22 00:02:34 TRACE Entering method processOrder
+2026-08-22 00:02:37 INFO Application started
+2026-08-22 00:02:41 INFO Handling request requestId=req-1050
+2026-08-22 00:02:42 DEBUG Cache hit for key user:1051
+2026-08-22 00:02:44 TRACE Entering method processOrder
+2026-08-22 00:02:47 TRACE Entering method processOrder
+2026-08-22 00:02:49 INFO Handling request requestId=req-1054
+2026-08-22 00:02:51 TRACE Entering method processOrder
+2026-08-22 00:02:52 TRACE Entering method processOrder
+2026-08-22 00:02:56 INFO Application started
+2026-08-22 00:02:59 DEBUG Cache hit for key user:1058
+2026-08-22 00:03:00 INFO Handling request requestId=req-1059
+2026-08-22 00:03:01 INFO Application started
+2026-08-22 00:03:05 INFO Application started
+2026-08-22 00:03:07 INFO Handling request requestId=req-1062
+2026-08-22 00:03:11 TRACE Entering method processOrder
+2026-08-22 00:03:14 TRACE Entering method processOrder
+2026-08-22 00:03:18 INFO Handling request requestId=req-1065
+2026-08-22 00:03:20 DEBUG Cache hit for key user:1066
+2026-08-22 00:03:23 INFO Request completed status=200 duration=142ms
+2026-08-22 00:03:27 INFO Application started
+2026-08-22 00:03:29 INFO Application started
+2026-08-22 00:03:30 TRACE Entering method processOrder
+2026-08-22 00:03:32 TRACE Entering method processOrder
+2026-08-22 00:03:33 INFO Application started
+2026-08-22 00:03:34 INFO Handling request requestId=req-1073
+2026-08-22 00:03:35 DEBUG Cache hit for key user:1074
+2026-08-22 00:03:40 INFO Handling request requestId=req-1075
+2026-08-22 00:03:44 INFO Handling request requestId=req-1076
+2026-08-22 00:03:46 TRACE Entering method processOrder
+2026-08-22 00:03:50 INFO Handling request requestId=req-1078
+2026-08-22 00:03:54 INFO Handling request requestId=req-1079
+2026-08-22 00:03:55 INFO Request completed status=200 duration=100ms
+2026-08-22 00:03:59 INFO Request completed status=200 duration=129ms
+2026-08-22 00:04:00 INFO Application started
+2026-08-22 00:04:04 DEBUG Cache hit for key user:1083
+2026-08-22 00:04:06 INFO Handling request requestId=req-1084
+2026-08-22 00:04:11 INFO Request completed status=200 duration=45ms
+2026-08-22 00:04:15 INFO Handling request requestId=req-1086
+2026-08-22 00:04:19 INFO Handling request requestId=req-1087
+2026-08-22 00:04:23 TRACE Entering method processOrder
+2026-08-22 00:04:24 TRACE Entering method processOrder
+2026-08-22 00:04:25 INFO Handling request requestId=req-1090
+2026-08-22 00:04:29 INFO Request completed status=200 duration=133ms
+2026-08-22 00:04:31 INFO Request completed status=200 duration=25ms
+2026-08-22 00:04:33 INFO Request completed status=200 duration=10ms
+2026-08-22 00:04:37 DEBUG Cache hit for key user:1094
+2026-08-22 00:04:40 INFO Request completed status=200 duration=188ms
+2026-08-22 00:04:45 INFO Request completed status=200 duration=49ms
+2026-08-22 00:04:47 DEBUG Cache hit for key user:1097
+2026-08-22 00:04:48 TRACE Entering method processOrder
+2026-08-22 00:04:53 INFO Application started
+2026-08-22 00:04:54 INFO Application started
+2026-08-22 00:04:58 TRACE Entering method processOrder
+2026-08-22 00:05:00 INFO Application started
+2026-08-22 00:05:01 INFO Handling request requestId=req-1103
+2026-08-22 00:05:06 INFO Application started
+2026-08-22 00:05:08 INFO Request completed status=200 duration=40ms
+2026-08-22 00:05:13 INFO Handling request requestId=req-1106
+2026-08-22 00:05:18 INFO Application started
+2026-08-22 00:05:19 INFO Request completed status=200 duration=178ms
+2026-08-22 00:05:24 TRACE Entering method processOrder
+2026-08-22 00:05:27 DEBUG Cache hit for key user:1110
+2026-08-22 00:05:30 INFO Handling request requestId=req-1111
+2026-08-22 00:05:34 INFO Handling request requestId=req-1112
+2026-08-22 00:05:37 INFO Request completed status=200 duration=90ms
+2026-08-22 00:05:38 INFO Application started
+2026-08-22 00:05:43 TRACE Entering method processOrder
+2026-08-22 00:05:44 TRACE Entering method processOrder
+2026-08-22 00:05:49 DEBUG Cache hit for key user:1117
+2026-08-22 00:05:52 INFO Application started
+2026-08-22 00:05:55 DEBUG Cache hit for key user:1119
+2026-08-22 00:05:59 TRACE Entering method processOrder
+2026-08-22 00:06:02 TRACE Entering method processOrder
+2026-08-22 00:06:07 INFO Application started
+2026-08-22 00:06:12 DEBUG Cache hit for key user:1123
+2026-08-22 00:06:13 INFO Handling request requestId=req-1124
+2026-08-22 00:06:14 INFO Application started
+2026-08-22 00:06:19 INFO Handling request requestId=req-1126
+2026-08-22 00:06:22 TRACE Entering method processOrder
+2026-08-22 00:06:25 INFO Handling request requestId=req-1128
+2026-08-22 00:06:28 TRACE Entering method processOrder
+2026-08-22 00:06:31 INFO Application started
+2026-08-22 00:06:35 DEBUG Cache hit for key user:1131
+2026-08-22 00:06:36 DEBUG Cache hit for key user:1132
+2026-08-22 00:06:39 INFO Handling request requestId=req-1133
+2026-08-22 00:06:43 TRACE Entering method processOrder
+2026-08-22 00:06:47 TRACE Entering method processOrder
+2026-08-22 00:06:48 INFO Application started
+2026-08-22 00:06:50 TRACE Entering method processOrder
+2026-08-22 00:06:53 TRACE Entering method processOrder
+2026-08-22 00:06:55 INFO Request completed status=200 duration=42ms
+2026-08-22 00:06:56 DEBUG Cache hit for key user:1140
+2026-08-22 00:06:57 DEBUG Cache hit for key user:1141
+2026-08-22 00:06:59 INFO Application started
+2026-08-22 00:07:04 INFO Request completed status=200 duration=168ms
+2026-08-22 00:07:06 INFO Handling request requestId=req-1144
+2026-08-22 00:07:08 INFO Request completed status=200 duration=16ms
+2026-08-22 00:07:10 DEBUG Cache hit for key user:1146
+2026-08-22 00:07:12 DEBUG Cache hit for key user:1147
+2026-08-22 00:07:13 INFO Request completed status=200 duration=19ms
+2026-08-22 00:07:17 INFO Handling request requestId=req-1149
+2026-08-22 00:07:21 DEBUG Cache hit for key user:1150
+2026-08-22 00:07:23 INFO Handling request requestId=req-1151
+2026-08-22 00:07:25 INFO Request completed status=200 duration=94ms
+2026-08-22 00:07:28 INFO Application started
+2026-08-22 00:07:31 TRACE Entering method processOrder
+2026-08-22 00:07:36 DEBUG Cache hit for key user:1155
+2026-08-22 00:07:37 DEBUG Cache hit for key user:1156
+2026-08-22 00:07:42 DEBUG Cache hit for key user:1157
+2026-08-22 00:07:43 TRACE Entering method processOrder
+2026-08-22 00:07:46 DEBUG Cache hit for key user:1159
+2026-08-22 00:07:51 TRACE Entering method processOrder
+2026-08-22 00:07:55 TRACE Entering method processOrder
+2026-08-22 00:07:58 INFO Application started
+2026-08-22 00:08:02 INFO Application started
+2026-08-22 00:08:07 INFO Handling request requestId=req-1164
+2026-08-22 00:08:11 INFO Application started
+2026-08-22 00:08:14 TRACE Entering method processOrder
+2026-08-22 00:08:15 DEBUG Cache hit for key user:1167
+2026-08-22 00:08:18 INFO Request completed status=200 duration=93ms
+2026-08-22 00:08:22 DEBUG Cache hit for key user:1169
+2026-08-22 00:08:24 INFO Handling request requestId=req-1170
+2026-08-22 00:08:28 INFO Handling request requestId=req-1171
+2026-08-22 00:08:33 DEBUG Cache hit for key user:1172
+2026-08-22 00:08:38 INFO Application started
+2026-08-22 00:08:41 INFO Handling request requestId=req-1174
+2026-08-22 00:08:46 TRACE Entering method processOrder
+2026-08-22 00:08:49 INFO Request completed status=200 duration=123ms
+2026-08-22 00:08:53 INFO Handling request requestId=req-1177
+2026-08-22 00:08:57 INFO Handling request requestId=req-1178
+2026-08-22 00:08:58 DEBUG Cache hit for key user:1179
+2026-08-22 00:09:03 DEBUG Cache hit for key user:1180
+2026-08-22 00:09:05 DEBUG Cache hit for key user:1181
+2026-08-22 00:09:07 INFO Handling request requestId=req-1182
+2026-08-22 00:09:08 INFO Handling request requestId=req-1183
+2026-08-22 00:09:13 INFO Application started
+2026-08-22 00:09:17 TRACE Entering method processOrder
+2026-08-22 00:09:21 INFO Request completed status=200 duration=112ms
+2026-08-22 00:09:23 INFO Handling request requestId=req-1187
+2026-08-22 00:09:24 INFO Application started
+2026-08-22 00:09:26 INFO Handling request requestId=req-1189
+2026-08-22 00:09:31 INFO Request completed status=200 duration=22ms
+2026-08-22 00:09:36 INFO Handling request requestId=req-1191
+2026-08-22 00:09:40 INFO Handling request requestId=req-1192
+2026-08-22 00:09:45 TRACE Entering method processOrder
+2026-08-22 00:09:48 INFO Request completed status=200 duration=166ms
+2026-08-22 00:09:53 INFO Request completed status=200 duration=150ms
+2026-08-22 00:09:57 INFO Handling request requestId=req-1196
+2026-08-22 00:10:01 INFO Request completed status=200 duration=76ms
+2026-08-22 00:10:03 DEBUG Cache hit for key user:1198
+2026-08-22 00:10:07 INFO Handling request requestId=req-1199
+2026-08-22 00:10:11 INFO Application started
+2026-08-22 00:10:14 INFO Handling request requestId=req-1201
+2026-08-22 00:10:17 DEBUG Cache hit for key user:1202
+2026-08-22 00:10:18 INFO Handling request requestId=req-1203
+2026-08-22 00:10:20 INFO Request completed status=200 duration=187ms
+2026-08-22 00:10:22 INFO Handling request requestId=req-1205
+2026-08-22 00:10:26 INFO Request completed status=200 duration=94ms
+2026-08-22 00:10:31 INFO Request completed status=200 duration=116ms
+2026-08-22 00:10:32 INFO Handling request requestId=req-1208
+2026-08-22 00:10:36 TRACE Entering method processOrder
+2026-08-22 00:10:37 TRACE Entering method processOrder
+2026-08-22 00:10:41 INFO Application started
+2026-08-22 00:10:44 INFO Request completed status=200 duration=117ms
+2026-08-22 00:10:49 TRACE Entering method processOrder
+2026-08-22 00:10:51 INFO Request completed status=200 duration=66ms
+2026-08-22 00:10:54 INFO Request completed status=200 duration=134ms
+2026-08-22 00:10:55 INFO Request completed status=200 duration=96ms
+2026-08-22 00:10:59 INFO Handling request requestId=req-1217
+2026-08-22 00:11:01 TRACE Entering method processOrder
+2026-08-22 00:11:02 INFO Request completed status=200 duration=161ms
+2026-08-22 00:11:07 INFO Application started
+2026-08-22 00:11:11 INFO Handling request requestId=req-1221
+2026-08-22 00:11:13 INFO Application started
+2026-08-22 00:11:17 DEBUG Cache hit for key user:1223
+2026-08-22 00:11:21 DEBUG Cache hit for key user:1224
+2026-08-22 00:11:25 DEBUG Cache hit for key user:1225
+2026-08-22 00:11:28 INFO Application started
+2026-08-22 00:11:29 TRACE Entering method processOrder
+2026-08-22 00:11:32 INFO Handling request requestId=req-1228
+2026-08-22 00:11:33 INFO Application started
+2026-08-22 00:11:35 INFO Handling request requestId=req-1230
+2026-08-22 00:11:40 INFO Handling request requestId=req-1231
+2026-08-22 00:11:42 INFO Request completed status=200 duration=181ms
+2026-08-22 00:11:43 TRACE Entering method processOrder
+2026-08-22 00:11:47 DEBUG Cache hit for key user:1234
+2026-08-22 00:11:49 TRACE Entering method processOrder
+2026-08-22 00:11:50 INFO Handling request requestId=req-1236
+2026-08-22 00:11:51 TRACE Entering method processOrder
+2026-08-22 00:11:54 TRACE Entering method processOrder
+2026-08-22 00:11:58 INFO Request completed status=200 duration=193ms
+2026-08-22 00:12:00 INFO Application started
+2026-08-22 00:12:02 INFO Application started
+2026-08-22 00:12:05 TRACE Entering method processOrder
+2026-08-22 00:12:10 INFO Application started
+2026-08-22 00:12:15 INFO Request completed status=200 duration=179ms
+2026-08-22 00:12:18 INFO Application started
+2026-08-22 00:12:21 INFO Application started
+2026-08-22 00:12:25 INFO Application started
+2026-08-22 00:12:28 INFO Request completed status=200 duration=191ms
+2026-08-22 00:12:30 INFO Request completed status=200 duration=55ms
+2026-08-22 00:12:35 DEBUG Cache hit for key user:1250
+2026-08-22 00:12:40 INFO Request completed status=200 duration=129ms
+2026-08-22 00:12:44 TRACE Entering method processOrder
+2026-08-22 00:12:47 INFO Handling request requestId=req-1253
+2026-08-22 00:12:50 INFO Request completed status=200 duration=72ms
+2026-08-22 00:12:54 TRACE Entering method processOrder
+2026-08-22 00:12:58 DEBUG Cache hit for key user:1256
+2026-08-22 00:13:02 DEBUG Cache hit for key user:1257
+2026-08-22 00:13:06 INFO Handling request requestId=req-1258
+2026-08-22 00:13:09 DEBUG Cache hit for key user:1259
+2026-08-22 00:13:14 DEBUG Cache hit for key user:1260
+2026-08-22 00:13:15 TRACE Entering method processOrder
+2026-08-22 00:13:16 INFO Handling request requestId=req-1262
+2026-08-22 00:13:20 INFO Request completed status=200 duration=152ms
+2026-08-22 00:13:22 INFO Request completed status=200 duration=175ms
+2026-08-22 00:13:26 INFO Request completed status=200 duration=14ms
+2026-08-22 00:13:27 DEBUG Cache hit for key user:1266
+2026-08-22 00:13:31 INFO Handling request requestId=req-1267
+2026-08-22 00:13:36 DEBUG Cache hit for key user:1268
+2026-08-22 00:13:41 TRACE Entering method processOrder
+2026-08-22 00:13:45 TRACE Entering method processOrder
+2026-08-22 00:13:48 INFO Request completed status=200 duration=79ms
+2026-08-22 00:13:51 DEBUG Cache hit for key user:1272
+2026-08-22 00:13:52 INFO Handling request requestId=req-1273
+2026-08-22 00:13:53 TRACE Entering method processOrder
+2026-08-22 00:13:55 INFO Handling request requestId=req-1275
+2026-08-22 00:13:59 DEBUG Cache hit for key user:1276
+2026-08-22 00:14:04 TRACE Entering method processOrder
+2026-08-22 00:14:07 INFO Application started
+2026-08-22 00:14:10 INFO Handling request requestId=req-1279
+2026-08-22 00:14:12 DEBUG Cache hit for key user:1280
+2026-08-22 00:14:17 INFO Handling request requestId=req-1281
+2026-08-22 00:14:18 INFO Application started
+2026-08-22 00:14:21 INFO Handling request requestId=req-1283
+2026-08-22 00:14:25 INFO Application started
+2026-08-22 00:14:30 DEBUG Cache hit for key user:1285
+2026-08-22 00:14:34 INFO Request completed status=200 duration=97ms
+2026-08-22 00:14:36 INFO Application started
+2026-08-22 00:14:40 INFO Application started
+2026-08-22 00:14:44 INFO Request completed status=200 duration=28ms
+2026-08-22 00:14:49 INFO Application started
+2026-08-22 00:14:51 TRACE Entering method processOrder
+2026-08-22 00:14:52 INFO Handling request requestId=req-1292
+2026-08-22 00:14:57 INFO Request completed status=200 duration=165ms
+2026-08-22 00:15:02 TRACE Entering method processOrder
+2026-08-22 00:15:07 INFO Request completed status=200 duration=125ms
+2026-08-22 00:15:11 DEBUG Cache hit for key user:1296
+2026-08-22 00:15:15 DEBUG Cache hit for key user:1297
+2026-08-22 00:15:20 INFO Application started
+2026-08-22 00:15:21 INFO Handling request requestId=req-1299
+2026-08-22 00:15:42 ERROR Database connection failed
+2026-08-22 00:15:43 ERROR Database connection failed
+2026-08-22 00:15:44 ERROR Database connection failed
+2026-08-22 00:15:45 ERROR Database connection failed
+2026-08-22 00:15:46 ERROR Database connection failed
+2026-08-22 00:15:47 ERROR Database connection failed
+2026-08-22 00:15:52 ERROR [http-nio-8080-exec-4] com.example.UserService - Failed to load user requestId=req-9001
+2026-08-22 00:15:52 ERROR java.lang.NullPointerException: Cannot invoke method on null object
+	at com.example.UserService.loadUser(UserService.java:88)
+	at com.example.UserController.getUser(UserController.java:42)
+Caused by: java.lang.IllegalStateException: session expired
+2026-08-22 00:16:03 ERROR Authentication failed for user admin0
+2026-08-22 00:16:04 ERROR Authentication failed for user admin1
+2026-08-22 00:16:05 ERROR Authentication failed for user admin2
+2026-08-22 00:16:20 WARN Memory usage above threshold
+2026-08-22 00:16:23 FATAL OutOfMemoryError: Java heap space
+2026-08-22 00:16:25 DEBUG Cache hit for key user:2000
+2026-08-22 00:16:26 INFO Handling request requestId=req-2001
+2026-08-22 00:16:28 TRACE Entering method processOrder
+2026-08-22 00:16:30 INFO Application started
+2026-08-22 00:16:34 TRACE Entering method processOrder
+2026-08-22 00:16:37 INFO Application started
+2026-08-22 00:16:40 DEBUG Cache hit for key user:2006
+2026-08-22 00:16:44 INFO Application started
+2026-08-22 00:16:46 DEBUG Cache hit for key user:2008
+2026-08-22 00:16:51 INFO Handling request requestId=req-2009
+2026-08-22 00:16:52 TRACE Entering method processOrder
+2026-08-22 00:16:54 DEBUG Cache hit for key user:2011
+2026-08-22 00:16:55 INFO Application started
+2026-08-22 00:16:58 TRACE Entering method processOrder
+2026-08-22 00:17:01 INFO Request completed status=200 duration=41ms
+2026-08-22 00:17:05 DEBUG Cache hit for key user:2015
+2026-08-22 00:17:09 DEBUG Cache hit for key user:2016
+2026-08-22 00:17:14 INFO Request completed status=200 duration=122ms
+2026-08-22 00:17:15 TRACE Entering method processOrder
+2026-08-22 00:17:19 DEBUG Cache hit for key user:2019
+2026-08-22 00:17:22 INFO Application started
+2026-08-22 00:17:24 TRACE Entering method processOrder
+2026-08-22 00:17:25 DEBUG Cache hit for key user:2022
+2026-08-22 00:17:26 INFO Handling request requestId=req-2023
+2026-08-22 00:17:31 INFO Request completed status=200 duration=81ms
+2026-08-22 00:17:33 TRACE Entering method processOrder
+2026-08-22 00:17:37 INFO Application started
+2026-08-22 00:17:40 INFO Request completed status=200 duration=95ms
+2026-08-22 00:17:43 INFO Application started
+2026-08-22 00:17:46 INFO Request completed status=200 duration=187ms
+2026-08-22 00:17:50 DEBUG Cache hit for key user:2030
+2026-08-22 00:17:54 TRACE Entering method processOrder
+2026-08-22 00:17:58 INFO Application started
+2026-08-22 00:18:01 DEBUG Cache hit for key user:2033
+2026-08-22 00:18:05 TRACE Entering method processOrder
+2026-08-22 00:18:10 INFO Request completed status=200 duration=115ms
+2026-08-22 00:18:11 INFO Handling request requestId=req-2036
+2026-08-22 00:18:14 TRACE Entering method processOrder
+2026-08-22 00:18:18 INFO Application started
+2026-08-22 00:18:21 TRACE Entering method processOrder
+2026-08-22 00:18:24 INFO Request completed status=200 duration=188ms
+2026-08-22 00:18:28 INFO Application started
+2026-08-22 00:18:33 INFO Handling request requestId=req-2042
+2026-08-22 00:18:35 DEBUG Cache hit for key user:2043
+2026-08-22 00:18:36 TRACE Entering method processOrder
+2026-08-22 00:18:37 INFO Handling request requestId=req-2045
+2026-08-22 00:18:41 INFO Application started
+2026-08-22 00:18:43 INFO Request completed status=200 duration=193ms
+2026-08-22 00:18:46 TRACE Entering method processOrder
+2026-08-22 00:18:49 INFO Request completed status=200 duration=133ms
+2026-08-22 00:18:53 INFO Handling request requestId=req-2050
+2026-08-22 00:18:58 INFO Handling request requestId=req-2051
+2026-08-22 00:19:00 TRACE Entering method processOrder
+2026-08-22 00:19:02 INFO Application started
+2026-08-22 00:19:06 DEBUG Cache hit for key user:2054
+2026-08-22 00:19:09 INFO Application started
+2026-08-22 00:19:12 TRACE Entering method processOrder
+2026-08-22 00:19:16 INFO Handling request requestId=req-2057
+2026-08-22 00:19:21 INFO Request completed status=200 duration=98ms
+2026-08-22 00:19:24 TRACE Entering method processOrder
+2026-08-22 00:19:28 INFO Request completed status=200 duration=92ms
+2026-08-22 00:19:30 INFO Handling request requestId=req-2061
+2026-08-22 00:19:34 INFO Handling request requestId=req-2062
+2026-08-22 00:19:35 DEBUG Cache hit for key user:2063
+2026-08-22 00:19:39 INFO Request completed status=200 duration=108ms
+2026-08-22 00:19:41 INFO Request completed status=200 duration=19ms
+2026-08-22 00:19:43 TRACE Entering method processOrder
+2026-08-22 00:19:46 INFO Application started
+2026-08-22 00:19:47 TRACE Entering method processOrder
+2026-08-22 00:19:48 INFO Handling request requestId=req-2069
+2026-08-22 00:19:50 INFO Application started
+2026-08-22 00:19:53 DEBUG Cache hit for key user:2071
+2026-08-22 00:19:57 INFO Application started
+2026-08-22 00:20:02 INFO Request completed status=200 duration=91ms
+2026-08-22 00:20:06 TRACE Entering method processOrder
+2026-08-22 00:20:11 INFO Application started
+2026-08-22 00:20:14 INFO Handling request requestId=req-2076
+2026-08-22 00:20:18 INFO Application started
+2026-08-22 00:20:19 INFO Request completed status=200 duration=52ms
+2026-08-22 00:20:22 INFO Application started
+2026-08-22 00:20:25 INFO Application started
+2026-08-22 00:20:28 DEBUG Cache hit for key user:2081
+2026-08-22 00:20:30 INFO Handling request requestId=req-2082
+2026-08-22 00:20:34 TRACE Entering method processOrder
+2026-08-22 00:20:36 INFO Handling request requestId=req-2084
+2026-08-22 00:20:37 TRACE Entering method processOrder
+2026-08-22 00:20:42 INFO Handling request requestId=req-2086
+2026-08-22 00:20:47 INFO Handling request requestId=req-2087
+2026-08-22 00:20:51 DEBUG Cache hit for key user:2088
+2026-08-22 00:20:54 INFO Application started
+2026-08-22 00:20:57 TRACE Entering method processOrder
+2026-08-22 00:20:58 INFO Request completed status=200 duration=98ms
+2026-08-22 00:21:03 DEBUG Cache hit for key user:2092
+2026-08-22 00:21:07 DEBUG Cache hit for key user:2093
+2026-08-22 00:21:10 INFO Handling request requestId=req-2094
+2026-08-22 00:21:14 INFO Application started
+2026-08-22 00:21:18 TRACE Entering method processOrder
+2026-08-22 00:21:23 DEBUG Cache hit for key user:2097
+2026-08-22 00:21:26 INFO Application started
+2026-08-22 00:21:30 DEBUG Cache hit for key user:2099
