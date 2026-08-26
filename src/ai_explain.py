@@ -5,16 +5,9 @@ from concurrent.futures import ThreadPoolExecutor
 
 logger = logging.getLogger('logsense')
 
-MODEL = 'gemini-3.6-flash'
+MODEL = 'openai/gpt-oss-20b'
 MAX_LINES_PER_CALL = 5
-# Each call has been observed taking anywhere from ~7s to ~40s -- a hard
-# per-call timeout keeps one slow response from stalling the whole request;
-# a single retry attempt (no automatic backoff-and-retry) means a failure
-# falls back to the keyword-based explanation quickly instead of retrying
-# into an even longer wait. 10s is the API's own enforced minimum -- a
-# shorter deadline is rejected outright (400 INVALID_ARGUMENT) rather than
-# actually being applied.
-TIMEOUT_MS = 10000
+TIMEOUT_S = 10
 
 _client = None
 _client_checked = False
@@ -35,23 +28,23 @@ PROMPT_TEMPLATE = (
 
 
 def _get_client():
-    """Lazily build the Gemini client from GEMINI_API_KEY. Returns None
-    (and only logs once) if no key is configured or the SDK isn't
-    installed -- callers must treat that as "AI enhancement unavailable"
-    and fall back to the keyword-based explanations, not as an error."""
+    """Lazily build the Groq client from GROQ_API_KEY. Returns None (and
+    only logs once) if no key is configured or the SDK isn't installed --
+    callers must treat that as "AI enhancement unavailable" and fall back
+    to the keyword-based explanations, not as an error."""
     global _client, _client_checked
     if _client_checked:
         return _client
     _client_checked = True
 
-    api_key = os.environ.get('GEMINI_API_KEY')
+    api_key = os.environ.get('GROQ_API_KEY')
     if not api_key:
         return None
     try:
-        from google import genai
-        _client = genai.Client(api_key=api_key)
+        from groq import Groq
+        _client = Groq(api_key=api_key, max_retries=0, timeout=TIMEOUT_S)
     except Exception as exc:
-        logger.warning('Gemini client unavailable, using keyword-based '
+        logger.warning('Groq client unavailable, using keyword-based '
                         'explanations only: %s', exc)
         _client = None
     return _client
@@ -63,7 +56,7 @@ def ai_enabled():
 
 
 def explain_evidence_lines(evidence):
-    """Ask Gemini for a specific, plain-language explanation of each
+    """Ask Groq for a specific, plain-language explanation of each
     evidence line, grounded in its exact wording -- richer than the fixed
     keyword-rule text, since an LLM can pick up on details (a service
     name, a specific resource) a regex can't.
@@ -84,19 +77,12 @@ def explain_evidence_lines(evidence):
     prompt = PROMPT_TEMPLATE.format(lines=lines_block)
 
     try:
-        from google.genai import types
-        response = client.models.generate_content(
+        response = client.chat.completions.create(
             model=MODEL,
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                response_mime_type='application/json',
-                http_options=types.HttpOptions(
-                    timeout=TIMEOUT_MS,
-                    retry_options=types.HttpRetryOptions(attempts=1),
-                ),
-            ),
+            messages=[{'role': 'user', 'content': prompt}],
+            response_format={'type': 'json_object'},
         )
-        parsed = json.loads(response.text)
+        parsed = json.loads(response.choices[0].message.content)
         return {int(k): v for k, v in parsed.items()
                 if k.isdigit() and int(k) < len(items) and isinstance(v, str) and v.strip()}
     except Exception as exc:
@@ -108,12 +94,11 @@ def explain_evidence_lines(evidence):
 def explain_evidence_for_anomalies(evidence_by_anomaly, max_anomalies=5):
     """Enhance evidence for multiple flagged windows at once.
 
-    Calling Gemini once per anomaly, sequentially, made analysis of a file
-    with several flagged sections take tens of seconds to minutes (each
-    call alone can take up to ~8s now that it's capped). Two things bound
-    that: only the first `max_anomalies` (callers should pass them ranked
-    by severity/score) get AI treatment at all -- the rest keep their
-    keyword-based explanation -- and the calls that do happen run
+    Calling the AI once per anomaly, sequentially, made analysis of a file
+    with several flagged sections take tens of seconds to minutes. Two
+    things bound that: only the first `max_anomalies` (callers should pass
+    them ranked by severity/score) get AI treatment at all -- the rest keep
+    their keyword-based explanation -- and the calls that do happen run
     concurrently instead of one after another, so N calls cost roughly one
     call's worth of wall-clock time, not N.
 

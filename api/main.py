@@ -7,6 +7,7 @@ from fastapi import Depends, FastAPI, File, HTTPException, Response, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
+from sqlalchemy.orm.attributes import flag_modified
 
 from api.auth import COOKIE_NAME, create_token, get_current_user, hash_password, verify_password
 from api.db import get_db, init_db
@@ -14,6 +15,8 @@ from api.db_models import Run, User
 from api.pipeline import (PIPELINE_CLASSES, HDFS_LINE_EXAMPLE, BGL_LINE_EXAMPLE,
                            SSH_LINE_EXAMPLE, GENERIC_LINE_EXAMPLE, guess_format,
                            SAMPLE_LINE_COUNT)
+from src.ai_explain import ai_enabled, explain_evidence_lines
+from src.narrate import narrate_generic
 
 app = FastAPI(title="LogSense API")
 
@@ -397,6 +400,63 @@ def get_anomaly(run_id: str, session_id: str,
     for item in run.anomalies:
         if item["session_id"] == session_id:
             return item
+
+    raise HTTPException(404, "Session not found")
+
+
+@app.post("/api/runs/{run_id}/anomalies/{session_id}/explain")
+def explain_anomaly(run_id: str, session_id: str,
+                     user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """On-demand AI-enhanced explanation for one anomaly -- not called during
+    analyze() itself (see api/pipeline.py), since an external API call has
+    no place in that path. This only re-narrates the ONE anomaly the user
+    actually asked about, and caches the result back onto the run so
+    re-opening it later doesn't call the AI again."""
+    if not ai_enabled():
+        raise HTTPException(400, {
+            'reason': 'AI_NOT_CONFIGURED',
+            'message': "AI-enhanced explanations aren't set up on this server "
+                       "(no GROQ_API_KEY configured).",
+        })
+
+    run = get_owned_run(run_id, user, db)
+    anomalies = run.anomalies
+
+    for item in anomalies:
+        if item["session_id"] != session_id:
+            continue
+
+        evidence = item.get("evidence")
+        if not evidence:
+            raise HTTPException(400, {
+                'reason': 'NOT_SUPPORTED',
+                'message': "A more detailed AI explanation isn't available for "
+                           "this kind of result.",
+            })
+
+        ai_explanations = explain_evidence_lines(evidence)
+        if not ai_explanations:
+            raise HTTPException(502, {
+                'reason': 'AI_CALL_FAILED',
+                'message': "Couldn't get a more detailed explanation right now. "
+                           "Please try again in a moment.",
+            })
+
+        for i, ev in enumerate(evidence):
+            if i in ai_explanations:
+                ev['explanation'] = ai_explanations[i]
+
+        diagnosis = {
+            'primary_cause': item['primary_cause'],
+            'all_causes': item['all_causes'],
+            'evidence': evidence,
+        }
+        item['report'] = narrate_generic(diagnosis, session_id, item['severity'])
+        item['evidence'] = evidence
+
+        flag_modified(run, 'anomalies')
+        db.commit()
+        return item
 
     raise HTTPException(404, "Session not found")
 

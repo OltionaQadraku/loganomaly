@@ -44,6 +44,15 @@ export async function getAnomaly(runId, sessionId) {
   return res.json();
 }
 
+export async function explainAnomaly(runId, sessionId) {
+  const res = await fetch(
+    `${API_BASE}/api/runs/${runId}/anomalies/${encodeURIComponent(sessionId)}/explain`,
+    { method: 'POST', credentials: 'include' },
+  );
+  if (!res.ok) await throwApiError(res, "Couldn't get a more detailed explanation.");
+  return res.json();
+}
+
 export async function listRuns() {
   const res = await fetch(`${API_BASE}/api/runs`, { credentials: 'include' });
   if (!res.ok) {

@@ -392,22 +392,11 @@ class GenericDetectionPipeline(WindowedGroupingMixin, BaseDetectionPipeline):
 
     LOG_TYPE = 'generic'
     LINE_EXAMPLE = GENERIC_LINE_EXAMPLE
-    # Smaller than BGL/SSH's 100 deliberately: most uploaded application
-    # logs are far shorter than those two datasets, and a 50-100 line
-    # window meant a typical few-hundred-line file only had 1-4 windows
-    # total -- too few for the relative "is this window unusual for THIS
-    # file" comparison in analyze() to have anything meaningful to compare
-    # against, so the anomaly rate could only ever land on a handful of
-    # coarse values (0%, 50%, 100%...). A smaller window gives moderate-
-    # sized files enough windows for that comparison to actually work.
     WINDOW_SIZE = 20
 
     def __init__(self, config_path='drain3_generic.ini'):
         self.config_path = config_path
         self.templates = {}
-        # No pretrained vocabulary/models exist for this log type -- these
-        # mirror the shape the other pipelines expose (for /api/health and
-        # /api/templates) without claiming a fixed event vocabulary.
         self.event_names = []
         self.models = {'rule_based': None}
 
@@ -437,8 +426,6 @@ class GenericDetectionPipeline(WindowedGroupingMixin, BaseDetectionPipeline):
                 }
                 pending.update(extract_generic_fields(content))
             elif kv_match:
-                # logfmt-style line ("level=INFO key=value ... message=\"...\"")
-                # -- the level is a key=value pair, not a bare token.
                 if pending:
                     records.append(pending)
                 ts_match = GENERIC_LEADING_TIMESTAMP_PATTERN.match(line)
@@ -453,8 +440,6 @@ class GenericDetectionPipeline(WindowedGroupingMixin, BaseDetectionPipeline):
                 }
                 pending.update(extract_generic_fields(line))
             elif pending and GENERIC_CONTINUATION_PATTERN.match(line):
-                # A stack-trace line ("at ...", "Caused by: ...") belongs to
-                # the log line above it, not to a level/timestamp of its own.
                 pending['content'] += ' ' + line.strip()
                 pending['raw'] += '\n' + line
             else:
@@ -489,27 +474,7 @@ class GenericDetectionPipeline(WindowedGroupingMixin, BaseDetectionPipeline):
 
         units = self.group_units(records)
         keys = list(units)
-
-        # A window is flagged if its severity-weighted suspicious content
-        # (FATAL/CRITICAL=3, ERROR=2, WARN=1 per line -- the same weights
-        # used for scoring below) is notably above what's typical for the
-        # REST of this file. Flagging on "contains any WARN+ line" sounds
-        # reasonable but isn't: a healthy service logging occasional
-        # retries/slow-query warnings at even a low background rate (a
-        # handful of percent of lines) will statistically put at least one
-        # such line in nearly every 50-line window, so almost the whole
-        # file gets flagged and every analysis reports ~100% anomaly rate
-        # regardless of whether anything is actually wrong. Comparing each
-        # window against the file's own average -- the same "is this
-        # different from normal for this file" idea HDFS/BGL/SSH get from a
-        # trained baseline, computed live since there's no pretrained
-        # baseline for arbitrary application logs -- fixes that.
-        #
-        # That comparison breaks down for small files though: with one or
-        # two windows total, a window's own score IS the file's average, so
-        # it can never register as "above average" no matter how bad it is.
-        # There, fall back to an absolute bar instead.
-        ABSOLUTE_FLOOR = 3  # e.g. one ERROR + one WARN, or three WARNs
+        ABSOLUTE_FLOOR = 3  
         MIN_WINDOWS_FOR_BASELINE = 4
         window_scores = {}
         has_fatal = {}
@@ -522,13 +487,8 @@ class GenericDetectionPipeline(WindowedGroupingMixin, BaseDetectionPipeline):
             mean_score = sum(window_scores.values()) / len(keys)
             elevated_threshold = max(mean_score * 2, mean_score + ABSOLUTE_FLOOR)
         else:
-            elevated_threshold = ABSOLUTE_FLOOR - 1  # i.e. just the absolute floor
+            elevated_threshold = ABSOLUTE_FLOOR - 1  
 
-        # Pass 1: diagnose every flagged window (fast, no network calls).
-        # A FATAL/CRITICAL line always flags its window unconditionally --
-        # that severity is significant on its own regardless of how it
-        # compares to the rest of the file (a single out-of-memory crash
-        # matters even in a file that otherwise has several of them).
         flagged = []
         for key in keys:
             if not (has_fatal[key] or window_scores[key] > elevated_threshold):
@@ -548,19 +508,6 @@ class GenericDetectionPipeline(WindowedGroupingMixin, BaseDetectionPipeline):
             })
 
         flagged.sort(key=lambda f: -f['score'])
-
-        # AI enhancement (explain_evidence_for_anomalies) deliberately does
-        # NOT run here. Checking a file is expected to be fast (HDFS/BGL/SSH
-        # analyse in well under a second even with 100+ anomalies) -- an
-        # external, rate-limited API call has no place in that path. Even
-        # capped and run concurrently, it added ~10s+ per upload and, on the
-        # free tier's ~20-requests/day quota, started failing outright under
-        # any real use. The keyword-based explanation from diagnose_generic
-        # is already specific to each line's actual wording; AI enhancement
-        # stays available in src/ai_explain.py for a future on-demand path
-        # (e.g. an explicit "get a more detailed explanation" action on a
-        # single issue) rather than being forced on every analysis.
-
         anomalies = []
         cause_counts = Counter()
         for f in flagged:
@@ -577,6 +524,7 @@ class GenericDetectionPipeline(WindowedGroupingMixin, BaseDetectionPipeline):
                 'report': narrate_generic(diagnosis, f['unit_id'], f['severity']),
                 'excess': [],
                 'missing': [],
+                'evidence': diagnosis['evidence'],
             })
 
         total_lines = len(records) + skipped

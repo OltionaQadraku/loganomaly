@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { getAnomaly } from '../api';
+import { getAnomaly, explainAnomaly } from '../api';
 import { parseReport } from '../reportFormat';
 import { IconAlertCircle, IconAlertTriangle, IconInfoCircle, IconChevronDown, IconDownload } from '../icons';
 
@@ -60,6 +60,8 @@ export default function IssueList({ anomalies, runId, meta = {} }) {
   const [details, setDetails] = useState({});
   const [downloading, setDownloading] = useState(false);
   const [downloadError, setDownloadError] = useState(null);
+  const [explaining, setExplaining] = useState(null);
+  const [explainError, setExplainError] = useState({});
 
   if (!anomalies?.length) return null;
 
@@ -83,6 +85,19 @@ export default function IssueList({ anomalies, runId, meta = {} }) {
     if (!details[group.title] && !group.examples[0].report) {
       loadReport(group).catch(() =>
         setDetails((prev) => ({ ...prev, [group.title]: { error: true } })));
+    }
+  }
+
+  async function handleExplainMore(group, detail) {
+    setExplaining(group.title);
+    setExplainError((prev) => ({ ...prev, [group.title]: null }));
+    try {
+      const enhanced = await explainAnomaly(runId, detail.session_id);
+      setDetails((prev) => ({ ...prev, [group.title]: enhanced }));
+    } catch (err) {
+      setExplainError((prev) => ({ ...prev, [group.title]: err.message }));
+    } finally {
+      setExplaining(null);
     }
   }
 
@@ -154,6 +169,21 @@ export default function IssueList({ anomalies, runId, meta = {} }) {
                   {!detail && <p className="status-message">Loading details…</p>}
                   {detail?.error && <p className="status-message">Couldn't load the details for this item.</p>}
                   {detail && !detail.error && <IssueDetails report={detail.report} />}
+                  {detail && !detail.error && meta.log_type === 'generic' && detail.evidence && (
+                    <div className="issue-explain-more">
+                      <button
+                        type="button"
+                        className="btn-secondary"
+                        onClick={() => handleExplainMore(group, detail)}
+                        disabled={explaining === group.title}
+                      >
+                        {explaining === group.title ? 'Asking AI…' : 'Get a more detailed explanation'}
+                      </button>
+                      {explainError[group.title] && (
+                        <p className="status-message">{explainError[group.title]}</p>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
             </div>

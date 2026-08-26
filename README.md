@@ -2,44 +2,73 @@
 
 Detecting and explaining anomalies in log files using machine learning.
 
-## Overview
+## What it does
 
-LogSense is a web application that accepts raw log files, parses them automatically, and detects anomalous sessions using unsupervised machine learning. It also identifies which log events caused a session to be
-flagged so the output is an explanation, not just an alert.
+You upload a log file, and instead of just dumping raw lines back at you, LogSense tells you what actually looks wrong with it. It figures out the log type on it, groups the file into sessions or windows depending on the format, and runs unsupervised ML models to flag the ones that don't look like the rest. For every flagged section it also tries to explain why what kind of problem this usually is, what in the log actually pointed to it, and what you should go check.
 
-Unlike rule-based monitoring, it learns normal behaviour from the data and requires no predefined rules.
+The whole point was to not build another tool that just says "something's off, good luck." Regular log monitoring means someone sat down and wrote rules for every failure they could think of ahead of time which falls apart the moment something happens that nobody predicted. Here the models just learn what "normal" looks like from the data itself, so they can catch things nobody explicitly told them to look for.
+
+## Log types it handles
+
+**HDFS** was the first one. Hadoop logs happen to include a real block ID right in the text, so grouping lines into sessions is straightforward every line already says which session it belongs to.
+
+**BGL** is a log pulled from an actual IBM Blue Gene/L supercomputer, and it doesn't give you anything like that block ID. There's no clean way to say "these lines belong together," so instead the log just gets cut into fixed-size windows and each window is judged on its own.
+
+**OpenSSH** is mostly a server getting hammered by bots trying random logins. Same deal as BGL no natural grouping, so it's windowed too.
+
+**Generic/Application** covers everything else, and it works differently from the other three. HDFS, BGL, and OpenSSH each have a real dataset behind them that the models were trained on ahead of time .
 
 ## Algorithms
 
-Isolation Forest, Local Outlier, Factor, PCA, Random Forest (baseline)
+**PCA / Isolation Forest / Local Outlier Factor**
+The three models that actually do the anomaly detection. They're unsupervised so they're not limited to catching only the failures they've seen labelled examples of before.
+**Random Forest**
+Only used for BGL, to figure out which of the 32 fault categories a flagged window matches once we already know something's wrong. Not involved in detecting the anomaly itself.
+**Drain3** 
+Groups similar log lines together, so the same message with a different number or IP in it still counts as one event, not a new one every time.
 
-## Tech Stack
+## Stack
 
-Python, scikit-learn, Drain3, FastAPI, React and PostgreSQL
+Python / FastAPI on the backend, scikit-learn + Drain3 for the ML side, SQLite for storage, JWT + bcrypt for login, React 19 + Vite on the frontend. PDF export is done client-side with jsPDF. There's an optional integration with Groq for extra-detailed, on-demand explanations on the Generic pipeline, but it's off unless you configure a key. 120 pytest tests cover the backend.
 
-## Installation
+## Getting it running
+
+Backend:
 
 ```bash
 python -m venv venv
 .\venv\Scripts\Activate.ps1
 pip install -r requirements.txt
+venv\Scripts\python.exe -m uvicorn api.main:app --host 127.0.0.1 --port 8000
 ```
 
-## Configuration
+Frontend, in another terminal:
 
-Optional environment variables:
+```bash
+cd web
+npm install
+npm run dev
+```
 
-- `LOGSENSE_SECRET_KEY` -- secret used to sign login sessions. Falls back to
-  a development-only default if unset; set a real value in production.
-- `GEMINI_API_KEY` -- if set, the Generic/Application log pipeline uses the
-  Gemini API (free tier at [aistudio.google.com](https://aistudio.google.com/apikey))
-  to write a more specific, plain-language explanation for each flagged log
-  line (naming the actual service/resource involved where the line mentions
-  one), instead of only the built-in keyword-rule explanations. Entirely
-  optional -- without it, Generic/Application analysis still works exactly
-  as before, using the keyword rules alone.
+Then just open URL Vite prints (usually `http://localhost:5173`).
 
-## Dataset
+Run the tests with `pytest` from the project root.
 
-HDFS dataset from [LogHub](https://github.com/logpai/loghub).
+## Environment variables (both optional)
 
+`LOGSENSE_SECRET_KEY`
+Signs the login sessions. There's a dev fallback so you don't need this just to try the app.
+
+`GROQ_API_KEY`
+If set, there's a "Get a more detailed explanation" button on each flagged issue in the Generic/Application pipeline that asks Groq for a more specific explanation of that one line. Get a free key at [console.groq.com/keys](https://console.groq.com/keys). Without it, everything still works with the built-in keyword explanations instead. It's on-demand, not called automatically during analysis, so uploads never wait on it. You call it yourself, whenever you want, by clicking that button on a flagged issue.
+
+## Where the data came from
+
+**HDFS**
+[LogHub](https://github.com/logpai/loghub), 11,175,629 lines, comes with real anomaly labels.
+**BGL**
+[Zenodo](https://zenodo.org/records/8196385), 4,747,963 messages from a real Blue Gene/L machine, labelled fault categories.
+**OpenSSH** 
+Same Zenodo source, 655,146 messages from a real SSH server over 28 days. No labels here, hence the bootstrap approach mentioned above.
+**Generic/Application** 
+No dataset, analysed live.
