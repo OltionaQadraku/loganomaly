@@ -25,6 +25,20 @@ python -m venv venv
 pip install -r requirements.txt
 ```
 
+## Configuration
+
+Optional environment variables:
+
+- `LOGSENSE_SECRET_KEY` -- secret used to sign login sessions. Falls back to
+  a development-only default if unset; set a real value in production.
+- `GEMINI_API_KEY` -- if set, the Generic/Application log pipeline uses the
+  Gemini API (free tier at [aistudio.google.com](https://aistudio.google.com/apikey))
+  to write a more specific, plain-language explanation for each flagged log
+  line (naming the actual service/resource involved where the line mentions
+  one), instead of only the built-in keyword-rule explanations. Entirely
+  optional -- without it, Generic/Application analysis still works exactly
+  as before, using the keyword rules alone.
+
 ## Dataset
 
 HDFS dataset from [LogHub](https://github.com/logpai/loghub).
