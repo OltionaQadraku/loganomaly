@@ -20,12 +20,6 @@ SSH_PATTERN = re.compile(
     r'(?P<host>\S+)\s+(?P<component>\w+)\[(?P<pid>\d+)\]:\s*(?P<content>.*)$'
 )
 
-# Generic / Application logs: unlike HDFS/BGL/SSH there is no single fixed
-# layout -- this covers common structured application-log shapes (plain
-# "<timestamp> LEVEL message", and Spring-Boot-style
-# "<timestamp> LEVEL [thread] logger - message"), tolerantly. Only the log
-# level is required; timestamp, thread and logger are all optional so a
-# file doesn't need every field on every line to be recognised.
 GENERIC_LEVELS = 'TRACE|DEBUG|INFO|WARN|WARNING|ERROR|FATAL|CRITICAL'
 
 GENERIC_TIMESTAMP = (
@@ -40,18 +34,10 @@ GENERIC_PATTERN = re.compile(
     rf'(?P<content>.*)$'
 )
 
-# Stack-trace / multi-line continuation: no level of its own, so it can't
-# be matched by GENERIC_PATTERN, but it belongs to the log line above it
-# rather than being unrecognised noise.
 GENERIC_CONTINUATION_PATTERN = re.compile(
     r'^\s*(at\s+\S+|Caused by:|\.\.\.\s*\d+\s+more|\s{2,}\S)'
 )
 
-# logfmt-style structured logs (Go/Zap/logrus-ish): the level is a
-# key=value pair rather than a bare token, e.g.
-# 'level=INFO server=web-01 ... message="Home page loaded successfully"'.
-# GENERIC_PATTERN doesn't match these (its level has to be a bare word near
-# the start of the line), so this is tried as a fallback.
 GENERIC_KV_LEVEL_PATTERN = re.compile(
     rf'\b(?:level|lvl)\s*=\s*"?(?P<level>{GENERIC_LEVELS})"?\b', re.I)
 GENERIC_KV_MESSAGE_PATTERN = re.compile(r'\b(?:message|msg)\s*=\s*"([^"]*)"', re.I)
