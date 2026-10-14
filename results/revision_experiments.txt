@@ -1,0 +1,36 @@
+﻿
+=== [G] Train-only vocabulary and IDF (random split, seed 42) ===
+
+-- HDFS: 0 of 45 templates never occur in training units, 0 test units contain one --
+  [G1] HDFS PCA  counts  PR AUC 0.987 -> 0.987 (diff +0.000)   F1 0.776 -> 0.776
+  [G1] HDFS LOF  counts  PR AUC 0.979 -> 0.979 (diff +0.000)   F1 0.913 -> 0.913
+  [G2] HDFS PCA  TF-IDF  PR AUC 0.985 -> 0.985 (diff -0.000)
+  [G2] HDFS LOF  TF-IDF  PR AUC 0.974 -> 0.988 (diff +0.014)
+  [G2] HDFS IF   TF-IDF  PR AUC 0.293 -> 0.293 (diff +0.000)
+
+-- BGL: 231 of 1124 templates never occur in training units, 52 test units contain one --
+  [G1] BGL PCA  counts  PR AUC 0.718 -> 0.718 (diff +0.000)   F1 0.506 -> 0.506
+  [G1] BGL LOF  counts  PR AUC 0.694 -> 0.694 (diff +0.000)   F1 0.677 -> 0.677
+
+=== [H] Chronological split, all detectors ===
+
+-- HDFS (test anomaly rate 0.047 = random PR AUC) --
+  [H1] HDFS PCA    PR AUC=0.972  F1=0.842
+  [H1] HDFS LOF    PR AUC=0.971  F1=0.934
+  [H1] HDFS IF     PR AUC=0.057  F1=0.057
+  [H1] HDFS IF-all PR AUC=0.276  F1=0.267
+
+-- BGL (test anomaly rate 0.101 = random PR AUC) --
+  [H1] BGL PCA    PR AUC=0.241  F1=0.285
+  [H1] BGL LOF    PR AUC=0.228  F1=0.296
+  [H1] BGL IF     PR AUC=0.122  F1=0.186
+  [H1] BGL IF-all PR AUC=0.250  F1=0.192
+
+=== [J] BGL PCA components, chronological split ===
+  [J1] k=5    var= 75.69%  PR AUC=0.241  F1=0.285
+  [J1] k=20   var= 91.84%  PR AUC=0.335  F1=0.295
+  [J1] k=50   var= 98.67%  PR AUC=0.282  F1=0.316
+  [J1] k=100  var= 99.99%  PR AUC=0.406  F1=0.309
+  [J1] k=200  var=100.00%  PR AUC=0.328  F1=0.283
+
+done in 344.8s
