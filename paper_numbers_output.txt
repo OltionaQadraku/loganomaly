@@ -8,3 +8,54 @@ Test windows: 14244 | anomalous: 1441 | random PR AUC ~ 0.101
   PCA                    P=0.615  R=0.615  F1=0.615  PR_AUC=0.718
   Local Outlier Factor   P=0.523  R=0.960  F1=0.677  PR_AUC=0.694
   Isolation Forest       P=0.155  R=0.154  F1=0.154  PR_AUC=0.119
+
+=== Numbers in the revised manuscript and where they come from ===
+All runs: seed 42, 70/30 stratified split unless stated, scikit-learn 1.9.0.
+
+Table 2, realistic threshold (P / R / F1 / PR AUC)          source
+  HDFS PCA      0.635 / 1.000 / 0.776 / 0.987                 this file (HDFS block)
+  HDFS LOF      0.841 / 1.000 / 0.913 / 0.980                 results/comparison_full.csv
+  HDFS IF       0.078 / 0.079 / 0.078 / 0.051                 results/comparison_full.csv
+  HDFS IF-all   0.407 / 0.604 / 0.486 / 0.553                 results/extra_if_config.txt [A1]
+  BGL  PCA      0.426 / 0.622 / 0.506 / 0.718                 results/extra_r_sensitivity.txt [E1] r x 1.0
+  BGL  LOF      0.523 / 0.960 / 0.677 / 0.694                 this file (BGL block)
+  BGL  IF       0.155 / 0.154 / 0.154 / 0.119                 this file (BGL block)
+  BGL  IF-all   0.288 / 0.335 / 0.310 / 0.279                 results/extra_if_config.txt [A1]
+
+Table 2, oracle threshold (top r% of test units, ties included)
+  HDFS PCA      0.947 / 0.960 / 0.953                         results/oracle_rows.txt
+  HDFS LOF      0.980 / 0.989 / 0.984                         results/oracle_rows.txt
+  BGL  PCA      0.615 / 0.615 / 0.615                         results/oracle_rows.txt
+  BGL  LOF      0.747 / 0.748 / 0.748                         results/oracle_rows.txt
+  IF (oracle) equals the IF row (0.078 HDFS, 0.155 BGL)       results/oracle_rows.txt
+
+Thresholds and PCA
+  Realistic threshold: 97th percentile (HDFS), 90th (BGL) of normal training scores
+  PCA variance, 5 components: 99.98% HDFS, 69.48% BGL         results/extra_components.txt [D1]
+  BGL, 200 components, random split: PR AUC 0.993             results/extra_components.txt [D1]
+  False alarms at realistic threshold: PCA 2,904, LOF 958     PCA from this file (7,955 flagged - 5,051 TP), LOF comparison_full.csv
+  TF-IDF on HDFS, PR AUC: PCA 0.985, LOF 0.974, IF 0.293      results/comparison_full.csv
+
+Isolation Forest vs [2]
+  max_samples=1.0, all training units: PR AUC 0.793           results/extra_if_config.txt [A1]
+
+Timing (Core i7-1355U, 16 GB RAM, HDFS, 172,518 test sessions)
+  PCA train 0.09 s, score 0.12 s; LOF train 3.3 s, score 9.9 s   results/comparison_full.csv (raw counts)
+
+Five random splits (seeds 0-4)
+  PR AUC HDFS PCA 0.988 +/- 0.002, LOF 0.983 +/- 0.002        results/extra_splits.txt [F1]
+  PR AUC BGL  PCA 0.716 +/- 0.009, LOF 0.687 +/- 0.027        results/extra_splits.txt [F1]
+  F1 HDFS LOF 0.910 +/- 0.009                                 results/comparison_seeds_summary.csv
+
+Chronological split (first 70% in file order trains)
+  HDFS PR AUC PCA 0.972, LOF 0.971; PCA F1 0.842              results/revision_experiments.txt [H1]
+  BGL  PR AUC PCA 0.241, LOF 0.228                            results/revision_experiments.txt [H1]
+  BGL  PCA, 5 to 200 components: best PR AUC 0.406 (k=100)    results/revision_experiments.txt [J1]
+
+Train-only vocabulary and IDF (leakage check)
+  Unseen templates: 231 of 1,124 on BGL, 0 on HDFS            results/revision_experiments.txt [G]
+  Counts: PR AUC unchanged; TF-IDF: largest change +0.014     results/revision_experiments.txt [G1], [G2]
+
+Explanation reset test (PCA, HDFS, oracle threshold, 4,998 flagged)
+  k=3 deviation 38.9%, random 5.5% +/- 0.3                    results/extra_explanation.txt [B1]
+  k=3 contribution 46.0%, k=5 64.1%, random 7.2% +/- 0.2      results/extra_explanation.txt [B1]
