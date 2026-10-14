@@ -1,0 +1,8 @@
+﻿
+=== [B] Explanation faithfulness, deviation vs contribution ===
+  anomalies flagged at oracle threshold: 4998
+  [B1] k=1  deviation=26.7%  contribution=38.2%  random=2.3% +/- 0.1
+  [B1] k=3  deviation=38.9%  contribution=46.0%  random=5.5% +/- 0.3
+  [B1] k=5  deviation=36.4%  contribution=64.1%  random=7.2% +/- 0.2
+
+done in 36.7s

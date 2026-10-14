@@ -1,0 +1,8 @@
+﻿
+=== [F] Five random splits ===
+  [F1] HDFS PCA  PR AUC = 0.988 +/- 0.002
+  [F1] HDFS LOF  PR AUC = 0.983 +/- 0.002
+  [F1] BGL PCA  PR AUC = 0.716 +/- 0.009
+  [F1] BGL LOF  PR AUC = 0.687 +/- 0.027
+
+done in 308.7s

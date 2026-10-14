@@ -1,0 +1,19 @@
+﻿
+=== [D] PCA component sweep ===
+
+-- HDFS (45 templates) --
+  [D1] k=2    var=80.62%  PR AUC=0.412  F1=0.566
+  [D1] k=5    var=99.98%  PR AUC=0.987  F1=0.776
+  [D1] k=10   var=100.00%  PR AUC=0.967  F1=0.791
+  [D1] k=20   var=100.00%  PR AUC=0.982  F1=0.844
+
+-- BGL (1124 templates) --
+  [D1] k=2    var=48.70%  PR AUC=0.689  F1=0.506
+  [D1] k=5    var=69.48%  PR AUC=0.718  F1=0.506
+  [D1] k=10   var=81.89%  PR AUC=0.756  F1=0.549
+  [D1] k=20   var=91.36%  PR AUC=0.800  F1=0.591
+  [D1] k=50   var=98.11%  PR AUC=0.876  F1=0.649
+  [D1] k=100  var=99.94%  PR AUC=0.963  F1=0.699
+  [D1] k=200  var=100.00%  PR AUC=0.993  F1=0.693
+
+done in 18.8s

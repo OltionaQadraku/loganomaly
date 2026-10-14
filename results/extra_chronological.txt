@@ -1,0 +1,6 @@
+﻿
+=== [C] Chronological split (first 70% train, last 30% test) ===
+  [C1] HDFS PCA  PR AUC=0.972  P=0.728 R=0.999 F1=0.842  (random PR AUC=0.047)
+  [C1] BGL PCA  PR AUC=0.241  P=0.190 R=0.578 F1=0.285  (random PR AUC=0.101)
+
+done in 5.0s
