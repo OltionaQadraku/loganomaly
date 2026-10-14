@@ -1,0 +1,10 @@
+=== HDFS ===
+Explained variance (5 components): 100.0%
+Label-free threshold (97th percentile of normal training errors):
+  P=0.635  R=1.000  F1=0.776  flagged=7955
+
+=== BGL (raw counts) ===
+Test windows: 14244 | anomalous: 1441 | random PR AUC ~ 0.101
+  PCA                    P=0.615  R=0.615  F1=0.615  PR_AUC=0.718
+  Local Outlier Factor   P=0.523  R=0.960  F1=0.677  PR_AUC=0.694
+  Isolation Forest       P=0.155  R=0.154  F1=0.154  PR_AUC=0.119
